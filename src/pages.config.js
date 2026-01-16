@@ -5,6 +5,9 @@ import Evolution from './pages/Evolution';
 import Achievements from './pages/Achievements';
 import Settings from './pages/Settings';
 import Inventory from './pages/Inventory';
+import Customize from './pages/Customize';
+import AISettings from './pages/AISettings';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -15,9 +18,12 @@ export const PAGES = {
     "Achievements": Achievements,
     "Settings": Settings,
     "Inventory": Inventory,
+    "Customize": Customize,
+    "AISettings": AISettings,
 }
 
 export const pagesConfig = {
     mainPage: "Welcome",
     Pages: PAGES,
+    Layout: __Layout,
 };
