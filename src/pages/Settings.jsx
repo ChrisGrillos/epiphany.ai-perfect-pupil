@@ -18,7 +18,8 @@ import {
   Palette,
   LogOut,
   Crown,
-  Check
+  Check,
+  Cpu
 } from 'lucide-react';
 import TierCard from '@/components/subscription/TierCard';
 
@@ -145,6 +146,7 @@ export default function Settings() {
               {[
                 { id: 'account', icon: User, label: 'Account' },
                 { id: 'subscription', icon: CreditCard, label: 'Subscription' },
+                { id: 'ai', icon: Cpu, label: 'AI Provider' },
                 { id: 'preferences', icon: Bell, label: 'Preferences' },
                 { id: 'privacy', icon: Shield, label: 'Privacy' }
               ].map(item => (
@@ -311,6 +313,33 @@ export default function Settings() {
                     />
                   </div>
                 </div>
+              </motion.div>
+            )}
+            
+            {/* AI Provider Section */}
+            {activeSection === 'ai' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm"
+              >
+                <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                  <Cpu className="w-5 h-5 text-violet-500" />
+                  AI Provider Settings
+                </h2>
+                
+                <p className="text-slate-600 mb-6">
+                  Configure external AI services for enhanced companion intelligence. Premium and Elite tiers can connect 
+                  custom AI providers like OpenAI, Anthropic, or your own LLM endpoints.
+                </p>
+                
+                <Button
+                  onClick={() => navigate(createPageUrl('AISettings'))}
+                  className="bg-violet-600 hover:bg-violet-700"
+                >
+                  <Cpu className="w-4 h-4 mr-2" />
+                  Manage AI Providers
+                </Button>
               </motion.div>
             )}
             

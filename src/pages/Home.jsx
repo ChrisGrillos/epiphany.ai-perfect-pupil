@@ -205,6 +205,14 @@ User message: "${message}"`,
             <Button 
               variant="ghost" 
               size="icon"
+              onClick={() => navigate(createPageUrl('Customize'))}
+              title="Customize"
+            >
+              <Sparkles className="w-5 h-5" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon"
               onClick={() => navigate(createPageUrl('Store'))}
             >
               <ShoppingBag className="w-5 h-5" />
