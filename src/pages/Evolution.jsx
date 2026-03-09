@@ -5,10 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Sparkles, Lock, Crown } from 'lucide-react';
+import { ArrowLeft, Sparkles, Lock, Crown, Zap, GitBranch } from 'lucide-react';
 import DNAGrid from '@/components/puzzle/DNAGrid';
 import CompanionAvatar from '@/components/companion/CompanionAvatar';
+import EvolutionPathSelector from '@/components/evolution/EvolutionPathSelector';
 
 export default function Evolution() {
   const navigate = useNavigate();
@@ -17,6 +19,7 @@ export default function Evolution() {
   const [loading, setLoading] = useState(true);
   const [difficulty, setDifficulty] = useState('easy');
   const [completedPuzzles, setCompletedPuzzles] = useState([]);
+  const [showPathSelector, setShowPathSelector] = useState(false);
   
   useEffect(() => {
     loadData();
@@ -43,20 +46,17 @@ export default function Evolution() {
   const handlePuzzleComplete = async (result) => {
     if (!companion) return;
     
-    // Calculate stat bonuses based on puzzle completion
     const bonuses = {
       personality_openness: Math.floor(Math.random() * 3) + 1,
       personality_curiosity: Math.floor(Math.random() * 3) + 1,
       experience_points: (companion.experience_points || 0) + (50 * (difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : 3))
     };
     
-    // Update companion
     await base44.entities.Companion.update(companion.id, {
       ...bonuses,
       evolution_dna: result
     });
     
-    // Log puzzle completion
     await base44.entities.EvolutionPuzzle.create({
       companion_id: companion.id,
       puzzle_type: 'full_helix',
@@ -65,13 +65,26 @@ export default function Evolution() {
       difficulty
     });
     
-    setCompanion(prev => ({
-      ...prev,
-      ...bonuses
-    }));
-    
+    setCompanion(prev => ({ ...prev, ...bonuses }));
     toast.success(`Evolution complete! +${bonuses.experience_points} XP earned!`);
   };
+
+  const handleEvolutionPathSelect = async (pathData) => {
+    if (!companion) return;
+    
+    await base44.entities.Companion.update(companion.id, {
+      evolution_path: pathData.evolution_path,
+      subtype: pathData.subtype,
+      signature_passive: pathData.signature_passive,
+      signature_ability: pathData.signature_ability
+    });
+
+    setCompanion(prev => ({ ...prev, ...pathData }));
+    setShowPathSelector(false);
+    toast.success(`${companion.name} chose the ${pathData.evolution_path} path — ${pathData.subtype} specialization!`);
+  };
+
+  const canChooseEvolutionPath = companion?.stage === 'teenager' && !companion?.evolution_path;
   
   const isLocked = !['premium', 'elite'].includes(subscription?.tier);
   
@@ -152,12 +165,69 @@ export default function Evolution() {
                   <span className="text-slate-500">Puzzles Solved</span>
                   <span className="font-medium">{completedPuzzles.length}</span>
                 </div>
+                {companion?.evolution_path && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Path</span>
+                      <Badge className="bg-violet-100 text-violet-700">{companion.evolution_path}</Badge>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Subtype</span>
+                      <Badge className="bg-cyan-100 text-cyan-700">{companion.subtype}</Badge>
+                    </div>
+                  </>
+                )}
               </div>
+
+              {/* Signature Abilities */}
+              {companion?.signature_passive && (
+                <div className="mt-4 p-3 bg-amber-50 rounded-xl">
+                  <div className="text-xs text-amber-600 font-semibold mb-1 flex items-center gap-1">
+                    <Zap className="w-3 h-3" /> Passive
+                  </div>
+                  <p className="text-xs text-amber-700">{companion.signature_passive}</p>
+                </div>
+              )}
+              {companion?.signature_ability && (
+                <div className="mt-2 p-3 bg-purple-50 rounded-xl">
+                  <div className="text-xs text-purple-600 font-semibold mb-1 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> Signature
+                  </div>
+                  <p className="text-xs text-purple-700">{companion.signature_ability}</p>
+                </div>
+              )}
+
+              {/* Evolution Path CTA */}
+              {canChooseEvolutionPath && !isLocked && (
+                <Button
+                  onClick={() => setShowPathSelector(true)}
+                  className="w-full mt-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:opacity-90"
+                  size="sm"
+                >
+                  <GitBranch className="w-4 h-4 mr-1" />
+                  Choose Evolution Path
+                </Button>
+              )}
             </motion.div>
           </div>
           
-          {/* Puzzle Area */}
+          {/* Puzzle Area / Path Selector */}
           <div className="lg:col-span-3">
+            {showPathSelector ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm"
+              >
+                <EvolutionPathSelector
+                  companion={companion}
+                  onSelect={handleEvolutionPathSelect}
+                />
+                <div className="mt-4">
+                  <Button variant="outline" onClick={() => setShowPathSelector(false)}>Back to Puzzles</Button>
+                </div>
+              </motion.div>
+            ) : (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -218,6 +288,7 @@ export default function Evolution() {
                 />
               )}
             </motion.div>
+            )}
           </div>
         </div>
       </main>
