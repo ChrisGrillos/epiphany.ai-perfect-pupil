@@ -86,6 +86,11 @@ export default function ChatInterface({
                     <span className="text-xs font-medium text-slate-500">
                       {companion?.name || 'Companion'}
                     </span>
+                    {message.emotion && (
+                      <span className="text-xs px-1.5 py-0.5 bg-violet-50 text-violet-500 rounded-full">
+                        {message.emotion}
+                      </span>
+                    )}
                   </div>
                 )}
                 <div className={`text-sm ${message.role === 'user' ? '' : 'prose prose-sm prose-slate max-w-none'}`}>
@@ -95,6 +100,12 @@ export default function ChatInterface({
                     <ReactMarkdown>{message.content}</ReactMarkdown>
                   )}
                 </div>
+                {message.memoryCreated && (
+                  <div className="mt-2 px-2 py-1 bg-violet-50 rounded-lg flex items-center gap-1.5 text-xs text-violet-600">
+                    <span>🧠</span>
+                    <span>New memory: <strong>{message.memoryCreated.key}</strong></span>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}

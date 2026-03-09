@@ -114,6 +114,22 @@ Deno.serve(async (req) => {
     // Bond increases on evolution
     statChanges.bond_level = Math.min(100, (companion.bond_level || 0) + 10);
 
+    // Phase 3: Apply evolution path bonuses for adult stage
+    if (nextStage === 'adult' && companion.evolution_path) {
+      const pathBonuses = {
+        Guardian: { fitness: 15, personality_empathy: 10 },
+        Predator: { fitness: 10, personality_energy: 15 },
+        Mystic: { knowledge_level: 15, personality_curiosity: 10 },
+        Scholar: { knowledge_level: 10, personality_empathy: 15 },
+        Trickster: { personality_openness: 15, personality_energy: 10 },
+        Adaptive: { knowledge_level: 5, fitness: 5, personality_openness: 5 }
+      };
+      const bonus = pathBonuses[companion.evolution_path] || {};
+      for (const [stat, val] of Object.entries(bonus)) {
+        statChanges[stat] = clampStat((statChanges[stat] || companion[stat] || 0) + val);
+      }
+    }
+
     const pcpReward = PCP_REWARDS[nextStage] || 0;
 
     // Update companion
