@@ -102,6 +102,18 @@ Deno.serve(async (req) => {
     }
     statChanges.stage = nextStage;
 
+    // Update trait_affinity on evolution (reward disciplined trait for reaching milestones)
+    const currentAffinity = companion.trait_affinity || { aggressive: 0, nurturing: 0, curious: 0, chaotic: 0, disciplined: 0 };
+    const evolutionAffinityBonus = { disciplined: 5, curious: 3 };
+    const newAffinity = { ...currentAffinity };
+    for (const [trait, delta] of Object.entries(evolutionAffinityBonus)) {
+      newAffinity[trait] = (newAffinity[trait] || 0) + delta;
+    }
+    statChanges.trait_affinity = newAffinity;
+
+    // Bond increases on evolution
+    statChanges.bond_level = Math.min(100, (companion.bond_level || 0) + 10);
+
     const pcpReward = PCP_REWARDS[nextStage] || 0;
 
     // Update companion

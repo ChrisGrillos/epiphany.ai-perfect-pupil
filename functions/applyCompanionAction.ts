@@ -86,6 +86,42 @@ function calculateLevel(xp) {
   return Math.floor(Math.sqrt(xp / 10)) + 1;
 }
 
+function deriveTemperament(affinity) {
+  const { aggressive = 0, nurturing = 0, curious = 0, chaotic = 0, disciplined = 0 } = affinity;
+  const scores = {
+    Fierce: aggressive * 2 + chaotic,
+    Protective: nurturing * 2 + disciplined,
+    Calculating: disciplined * 2 + curious,
+    Playful: chaotic * 2 + curious,
+    Calm: disciplined * 2 + nurturing,
+    Unstable: chaotic * 3
+  };
+  let best = 'Calm', bestScore = 0;
+  for (const [temp, score] of Object.entries(scores)) {
+    if (score > bestScore) { best = temp; bestScore = score; }
+  }
+  return best;
+}
+
+function deriveArchetype(affinity) {
+  const { aggressive = 0, nurturing = 0, curious = 0, chaotic = 0, disciplined = 0 } = affinity;
+  const scores = {
+    Berserker: aggressive * 3,
+    Guardian: nurturing * 2 + disciplined,
+    Oracle: curious * 2 + disciplined,
+    Trickster: chaotic * 2 + curious,
+    Caretaker: nurturing * 3,
+    Duelist: aggressive * 2 + disciplined,
+    Vanguard: disciplined * 2 + aggressive,
+    Adaptive: 5  // baseline so new companions stay Adaptive until traits develop
+  };
+  let best = 'Adaptive', bestScore = 0;
+  for (const [arch, score] of Object.entries(scores)) {
+    if (score > bestScore) { best = arch; bestScore = score; }
+  }
+  return best;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -160,6 +196,31 @@ Deno.serve(async (req) => {
     }
     appliedChanges.last_interaction = now;
     appliedChanges.total_care_actions = (companion.total_care_actions || 0) + 1;
+
+    // Update trait_affinity based on action type
+    const currentAffinity = companion.trait_affinity || { aggressive: 0, nurturing: 0, curious: 0, chaotic: 0, disciplined: 0 };
+    const affinityDeltas = {
+      feed:     { nurturing: 2, disciplined: 1 },
+      exercise: { aggressive: 1, disciplined: 2 },
+      study:    { curious: 3, disciplined: 1 },
+      interact: { nurturing: 2, curious: 1 },
+      play:     { chaotic: 1, nurturing: 1 }
+    };
+    const deltas = affinityDeltas[action_type] || {};
+    const newAffinity = { ...currentAffinity };
+    for (const [trait, delta] of Object.entries(deltas)) {
+      newAffinity[trait] = (newAffinity[trait] || 0) + delta;
+    }
+    appliedChanges.trait_affinity = newAffinity;
+
+    // Update bond_level (care actions increase bond)
+    appliedChanges.bond_level = Math.min(100, (companion.bond_level || 0) + 1);
+
+    // Recalculate temperament based on trait_affinity
+    appliedChanges.temperament = deriveTemperament(newAffinity);
+
+    // Recalculate build_archetype based on trait_affinity
+    appliedChanges.build_archetype = deriveArchetype(newAffinity);
 
     // Pick response
     const responses = config.responses;

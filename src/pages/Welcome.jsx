@@ -47,16 +47,25 @@ export default function Welcome() {
     }
   };
   
+  const TIER_PUPIL_LIMITS = { free: 2, basic: 5, premium: 10, elite: 20 };
+
   const handleCreate = async () => {
     setIsCreating(true);
     setStep(STEPS.indexOf('creating'));
     
-    // Create subscription first
+    // Create subscription
     await base44.entities.Subscription.create({
       tier: formData.tier,
       monthly_price: formData.tier === 'free' ? 0 : formData.tier === 'basic' ? 0.99 : formData.tier === 'premium' ? 4.99 : 9.99,
       is_active: true,
       features: getFeatures(formData.tier)
+    });
+
+    // Create UserCurrency with tier-appropriate pupil limit
+    await base44.entities.UserCurrency.create({
+      pcp_balance: 0,
+      free_pupils_count: 1,
+      max_pupils_allowed: TIER_PUPIL_LIMITS[formData.tier] || 2
     });
     
     // Initialize stats based on stage
@@ -66,7 +75,7 @@ export default function Welcome() {
       teenager: { knowledge_level: 60, personality_openness: 70 }
     };
     
-    // Create companion
+    // Create companion with Phase 1 fields
     await base44.entities.Companion.create({
       name: formData.name,
       starting_stage: formData.stage,
@@ -91,7 +100,17 @@ export default function Welcome() {
       affection_level: 10,
       experience_points: 0,
       special_abilities: [],
-      learned_topics: []
+      learned_topics: [],
+      build_archetype: 'Adaptive',
+      body_frame: 'Balanced',
+      temperament: 'Calm',
+      trait_affinity: { aggressive: 0, nurturing: 0, curious: 0, chaotic: 0, disciplined: 0 },
+      bond_level: 0,
+      combat_damage_dealt: 0,
+      combat_damage_blocked: 0,
+      combat_healing_done: 0,
+      combat_ally_saves: 0,
+      combat_status_inflicted: 0
     });
     
     setTimeout(() => {

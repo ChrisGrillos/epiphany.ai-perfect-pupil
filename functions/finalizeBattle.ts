@@ -190,19 +190,46 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Log battle interaction for companion
+    // Log battle interaction for companion AND update trait_affinity + bond + combat stats
     if (battle.owner_a && battle.owner_a !== 'system') {
       for (const rosterId of (battle.team_a || [])) {
         const units = await base44.asServiceRole.entities.PupilRoster.filter({ id: rosterId });
         if (units && units.length > 0 && units[0].companion_id && units[0].companion_id !== 'system') {
+          const companionId = units[0].companion_id;
+
           await base44.asServiceRole.entities.InteractionLog.create({
-            companion_id: units[0].companion_id,
+            companion_id: companionId,
             action_type: 'battle',
             details: { battle_id, winner: battle.winner, xp: xpAwards[rosterId] || 0 },
             xp_awarded: xpAwards[rosterId] || 0,
             pcp_awarded: pcpAwards[battle.owner_a] || 0,
             source: 'battle'
           });
+
+          // Update companion trait_affinity, bond, and combat performance
+          const companions = await base44.asServiceRole.entities.Companion.filter({ id: companionId });
+          if (companions && companions.length > 0) {
+            const comp = companions[0];
+            const aff = comp.trait_affinity || { aggressive: 0, nurturing: 0, curious: 0, chaotic: 0, disciplined: 0 };
+
+            // Battle increases aggressive + disciplined
+            aff.aggressive = (aff.aggressive || 0) + 2;
+            aff.disciplined = (aff.disciplined || 0) + 1;
+
+            // Aggregate this unit's combat stats from turns
+            const unitTurns = turns.filter(t => t.actor_roster_id === rosterId);
+            const dmgDealt = unitTurns.reduce((s, t) => s + (t.damage_dealt || 0), 0);
+            const healDone = unitTurns.reduce((s, t) => s + (t.healing_done || 0), 0);
+            const statusCount = unitTurns.reduce((s, t) => s + (t.statuses_applied?.length || 0), 0);
+
+            await base44.asServiceRole.entities.Companion.update(companionId, {
+              trait_affinity: aff,
+              bond_level: Math.min(100, (comp.bond_level || 0) + 3),
+              combat_damage_dealt: (comp.combat_damage_dealt || 0) + dmgDealt,
+              combat_healing_done: (comp.combat_healing_done || 0) + healDone,
+              combat_status_inflicted: (comp.combat_status_inflicted || 0) + statusCount
+            });
+          }
         }
       }
     }

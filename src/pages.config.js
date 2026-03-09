@@ -49,6 +49,7 @@
  */
 import AISettings from './pages/AISettings';
 import Achievements from './pages/Achievements';
+import Battle from './pages/Battle';
 import Customize from './pages/Customize';
 import Evolution from './pages/Evolution';
 import Home from './pages/Home';
@@ -56,13 +57,13 @@ import Inventory from './pages/Inventory';
 import Settings from './pages/Settings';
 import Store from './pages/Store';
 import Welcome from './pages/Welcome';
-import Battle from './pages/Battle';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AISettings": AISettings,
     "Achievements": Achievements,
+    "Battle": Battle,
     "Customize": Customize,
     "Evolution": Evolution,
     "Home": Home,
@@ -70,7 +71,6 @@ export const PAGES = {
     "Settings": Settings,
     "Store": Store,
     "Welcome": Welcome,
-    "Battle": Battle,
 }
 
 export const pagesConfig = {
