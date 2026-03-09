@@ -2,13 +2,13 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import {
-  Heart, Dumbbell, BookOpen, MessageCircle, Gamepad2,
+  Heart, Activity, BookOpen, MessageCircle, Gamepad2,
   Swords, Sparkles, ShoppingBag, Brain
 } from 'lucide-react';
 
 const ACTION_CONFIG = {
   feed: { icon: Heart, color: 'bg-rose-100 text-rose-600', label: 'Fed' },
-  exercise: { icon: Dumbbell, color: 'bg-blue-100 text-blue-600', label: 'Exercised' },
+  exercise: { icon: Activity, color: 'bg-blue-100 text-blue-600', label: 'Exercised' },
   study: { icon: BookOpen, color: 'bg-cyan-100 text-cyan-600', label: 'Studied' },
   interact: { icon: MessageCircle, color: 'bg-violet-100 text-violet-600', label: 'Interacted' },
   play: { icon: Gamepad2, color: 'bg-amber-100 text-amber-600', label: 'Played' },
