@@ -91,6 +91,18 @@ export default function Battle() {
         ...finalResponse.data
       });
       setPhase('result');
+
+      // Phase 5: Check achievements after battle
+      if (companion?.id) {
+        base44.functions.invoke('checkAchievements', { companion_id: companion.id }).then(res => {
+          if (res.data?.newly_unlocked?.length > 0) {
+            const { toast } = require('sonner');
+            res.data.newly_unlocked.forEach(a => {
+              toast.success(`🏆 Achievement: ${a.key.replace(/_/g, ' ')} (+${a.xp} XP)`);
+            });
+          }
+        });
+      }
     }
 
     return roundResult;
