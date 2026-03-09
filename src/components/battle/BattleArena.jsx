@@ -16,6 +16,9 @@ import {
   Pause
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { 
+  applySignaturePassive, applyBondBoosts, traitWeightedAutoMove 
+} from './TraitBattleEngine';
 
 const ALIGNMENT_COLORS = {
   guardian: 'bg-blue-100 text-blue-700 border-blue-300',
@@ -47,12 +50,23 @@ const STATUS_ICONS = {
 
 export default function BattleArena({ 
   battle, 
-  teamA, 
-  teamB, 
+  teamA: rawTeamA, 
+  teamB: rawTeamB, 
   isPlayerTeamA = true,
   onTakeTurn,
-  onEndBattle 
+  onEndBattle,
+  companion
 }) {
+  // Phase 4: Apply bond boosts and signature passives
+  const bondLevel = companion?.bond_level || 0;
+  const teamA = applyBondBoosts(
+    rawTeamA.map(u => applySignaturePassive(u, companion, rawTeamA, rawTeamB)),
+    isPlayerTeamA ? bondLevel : 0
+  );
+  const teamB = applyBondBoosts(
+    rawTeamB.map(u => u),
+    isPlayerTeamA ? 0 : bondLevel
+  );
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [selectedMove, setSelectedMove] = useState(null);
   const [selectedTarget, setSelectedTarget] = useState(null);
@@ -78,7 +92,22 @@ export default function BattleArena({
     const unit = [...teamA, ...teamB].find(u => u.id === currentUnit?.unit_id);
     if (!unit) return;
     
-    const autoDecision = calculateAutoMove(unit, teamA, teamB, isPlayerTeamA);
+    // Phase 4: Use trait-weighted AI if companion has traits
+    const isMyUnit = isPlayerTeamA 
+      ? teamA.some(u => u.id === currentUnit?.unit_id)
+      : teamB.some(u => u.id === currentUnit?.unit_id);
+    
+    let autoDecision;
+    if (isMyUnit && companion?.trait_affinity) {
+      const allies = isPlayerTeamA ? teamA : teamB;
+      const enemies = isPlayerTeamA ? teamB : teamA;
+      autoDecision = traitWeightedAutoMove(unit, allies, enemies, companion);
+    }
+    
+    if (!autoDecision) {
+      autoDecision = calculateAutoMove(unit, teamA, teamB, isPlayerTeamA);
+    }
+    
     handleTakeTurn(autoDecision.move, autoDecision.target);
   };
   
