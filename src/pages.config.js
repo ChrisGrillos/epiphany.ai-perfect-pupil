@@ -57,6 +57,7 @@ import Inventory from './pages/Inventory';
 import Settings from './pages/Settings';
 import Store from './pages/Store';
 import Welcome from './pages/Welcome';
+import MemoryManager from './pages/MemoryManager';
 import __Layout from './Layout.jsx';
 
 
@@ -71,6 +72,7 @@ export const PAGES = {
     "Settings": Settings,
     "Store": Store,
     "Welcome": Welcome,
+    "MemoryManager": MemoryManager,
 }
 
 export const pagesConfig = {
