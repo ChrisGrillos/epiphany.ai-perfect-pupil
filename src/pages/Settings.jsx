@@ -65,18 +65,14 @@ export default function Settings() {
     // Simulate payment processing
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    const tierPrices = {
-      free: 0,
-      basic: 0.99,
-      premium: 4.99,
-      elite: 9.99
-    };
+    const tierPrices = { free: 0, basic: 0.99, premium: 4.99, elite: 9.99 };
+    const tierPupilLimits = { free: 2, basic: 5, premium: 10, elite: 20 };
     
     const tierFeatures = {
       free: ['basic_view', 'limited_chat'],
-      basic: ['full_care', 'unlimited_chat', 'store_access', 'achievements'],
-      premium: ['full_care', 'unlimited_chat', 'store_access', 'achievements', 'evolution_control', 'customization'],
-      elite: ['full_care', 'unlimited_chat', 'store_access', 'achievements', 'evolution_control', 'customization', 'puzzles', 'advanced_personalization']
+      basic: ['full_care', 'unlimited_chat', 'store_access', 'brain_export', 'achievements'],
+      premium: ['full_care', 'unlimited_chat', 'store_access', 'brain_export', 'achievements', 'evolution_control', 'customization'],
+      elite: ['full_care', 'unlimited_chat', 'store_access', 'brain_export', 'achievements', 'evolution_control', 'customization', 'puzzles', 'advanced_personalization']
     };
     
     if (subscription?.id) {
@@ -91,6 +87,14 @@ export default function Settings() {
         monthly_price: tierPrices[tier],
         is_active: true,
         features: tierFeatures[tier]
+      });
+    }
+
+    // Update max_pupils_allowed in UserCurrency
+    const currencies = await base44.entities.UserCurrency.list();
+    if (currencies && currencies.length > 0) {
+      await base44.entities.UserCurrency.update(currencies[0].id, {
+        max_pupils_allowed: tierPupilLimits[tier]
       });
     }
     
