@@ -10,7 +10,9 @@ const TIER_CONFIG = {
     price: 0,
     icon: Star,
     color: 'from-slate-400 to-slate-500',
+    pupils: 2,
     features: [
+      'Up to 2 Pupils',
       'View companion stats',
       'Basic interactions',
       'Limited chat (10/day)',
@@ -19,7 +21,7 @@ const TIER_CONFIG = {
     limitations: [
       'No purchases',
       'No evolution control',
-      'No mini-games'
+      'No brain export'
     ]
   },
   basic: {
@@ -27,13 +29,14 @@ const TIER_CONFIG = {
     price: 0.99,
     icon: Star,
     color: 'from-violet-500 to-purple-600',
+    pupils: 5,
     features: [
+      'Up to 5 Pupils',
       'Full care & interaction',
       'Unlimited chat',
       'Store access',
-      'Basic items & treats',
-      'Achievement tracking',
-      'All stage options'
+      'Local brain export',
+      'Achievement tracking'
     ],
     popular: true
   },
@@ -42,12 +45,13 @@ const TIER_CONFIG = {
     price: 4.99,
     icon: Crown,
     color: 'from-amber-500 to-orange-600',
+    pupils: 10,
     features: [
+      'Up to 10 Pupils',
       'Everything in Basic',
-      'Evolution control',
-      'Form & shape customization',
-      'Color palette editor',
-      'Premium cosmetics',
+      'Evolution control & branching',
+      'Customization & cosmetics',
+      'Signature ability unlocks',
       'Priority AI responses'
     ]
   },
@@ -56,14 +60,15 @@ const TIER_CONFIG = {
     price: 9.99,
     icon: Sparkles,
     color: 'from-rose-500 to-pink-600',
+    pupils: 20,
     features: [
+      'Up to 20 Pupils',
       'Everything in Premium',
       'DNA Evolution Puzzles',
       'Advanced personalization',
-      'Exclusive abilities',
-      'Early access features',
+      'Custom AI provider',
       'Direct trait influence',
-      'Custom themes'
+      'Full brain import/export'
     ]
   }
 };
