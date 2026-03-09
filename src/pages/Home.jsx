@@ -77,6 +77,15 @@ export default function Home() {
     setCompanion(response.data.companion);
     toast.success(response.data.response_text);
     setActionInProgress(false);
+
+    // Phase 5: Check achievements after care action
+    base44.functions.invoke('checkAchievements', { companion_id: companion.id }).then(res => {
+      if (res.data?.newly_unlocked?.length > 0) {
+        res.data.newly_unlocked.forEach(a => {
+          toast.success(`🏆 Achievement Unlocked: ${a.key.replace(/_/g, ' ')} (+${a.xp} XP)`);
+        });
+      }
+    });
   };
   
   const handleSendMessage = async (message) => {

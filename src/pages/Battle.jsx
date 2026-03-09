@@ -154,6 +154,7 @@ export default function Battle() {
               isPlayerTeamA={true}
               onTakeTurn={handleSubmitRound}
               onEndBattle={() => setPhase('result')}
+              companion={companion}
             />
           </motion.div>
         )}

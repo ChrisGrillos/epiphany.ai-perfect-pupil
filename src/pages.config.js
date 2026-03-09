@@ -54,10 +54,10 @@ import Customize from './pages/Customize';
 import Evolution from './pages/Evolution';
 import Home from './pages/Home';
 import Inventory from './pages/Inventory';
+import MemoryManager from './pages/MemoryManager';
 import Settings from './pages/Settings';
 import Store from './pages/Store';
 import Welcome from './pages/Welcome';
-import MemoryManager from './pages/MemoryManager';
 import __Layout from './Layout.jsx';
 
 
@@ -69,10 +69,10 @@ export const PAGES = {
     "Evolution": Evolution,
     "Home": Home,
     "Inventory": Inventory,
+    "MemoryManager": MemoryManager,
     "Settings": Settings,
     "Store": Store,
     "Welcome": Welcome,
-    "MemoryManager": MemoryManager,
 }
 
 export const pagesConfig = {
