@@ -58,6 +58,7 @@ import MemoryManager from './pages/MemoryManager';
 import Settings from './pages/Settings';
 import Store from './pages/Store';
 import Welcome from './pages/Welcome';
+import CompanionDashboard from './pages/CompanionDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -73,6 +74,7 @@ export const PAGES = {
     "Settings": Settings,
     "Store": Store,
     "Welcome": Welcome,
+    "CompanionDashboard": CompanionDashboard,
 }
 
 export const pagesConfig = {
