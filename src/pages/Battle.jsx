@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
+
 import { Button } from '@/components/ui/button';
 import { 
   ArrowLeft, 
@@ -96,7 +97,6 @@ export default function Battle() {
       if (companion?.id) {
         base44.functions.invoke('checkAchievements', { companion_id: companion.id }).then(res => {
           if (res.data?.newly_unlocked?.length > 0) {
-            const { toast } = require('sonner');
             res.data.newly_unlocked.forEach(a => {
               toast.success(`🏆 Achievement: ${a.key.replace(/_/g, ' ')} (+${a.xp} XP)`);
             });
