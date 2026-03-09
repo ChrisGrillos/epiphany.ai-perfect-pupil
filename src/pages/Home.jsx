@@ -20,6 +20,7 @@ import CompanionAvatar from '@/components/companion/CompanionAvatar';
 import StatsDisplay from '@/components/companion/StatsDisplay';
 import ActionButtons from '@/components/companion/ActionButtons';
 import ChatInterface from '@/components/companion/ChatInterface';
+import BrainExportPanel from '@/components/companion/BrainExportPanel';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -213,10 +214,15 @@ User message: "${message}"`,
                 <p className="text-sm text-slate-500 capitalize">
                   {companion?.stage} • {companion?.species}
                 </p>
-                <div className="flex items-center justify-center gap-2 mt-2">
+                <div className="flex items-center justify-center gap-2 mt-1">
                   <TrendingUp className="w-4 h-4 text-violet-500" />
                   <span className="text-sm font-medium text-violet-600">
                     {companion?.experience_points || 0} XP
+                  </span>
+                </div>
+                <div className="flex items-center justify-center gap-2 mt-1">
+                  <span className="text-xs text-slate-400">
+                    {companion?.build_archetype || 'Adaptive'} · {companion?.temperament || 'Calm'}
                   </span>
                 </div>
               </div>
@@ -295,7 +301,7 @@ User message: "${message}"`,
                 />
               </TabsContent>
               
-              <TabsContent value="stats" className="mt-0">
+              <TabsContent value="stats" className="mt-0 space-y-4">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -305,7 +311,39 @@ User message: "${message}"`,
                     {companion?.name}'s Stats
                   </h3>
                   <StatsDisplay companion={companion} />
+
+                  {/* Identity Summary */}
+                  <div className="mt-6 grid grid-cols-3 gap-3">
+                    <div className="p-3 bg-violet-50 rounded-xl text-center">
+                      <div className="text-xs text-violet-500 mb-1">Archetype</div>
+                      <div className="text-sm font-bold text-violet-700">{companion?.build_archetype || 'Adaptive'}</div>
+                    </div>
+                    <div className="p-3 bg-cyan-50 rounded-xl text-center">
+                      <div className="text-xs text-cyan-500 mb-1">Frame</div>
+                      <div className="text-sm font-bold text-cyan-700">{companion?.body_frame || 'Balanced'}</div>
+                    </div>
+                    <div className="p-3 bg-amber-50 rounded-xl text-center">
+                      <div className="text-xs text-amber-500 mb-1">Temperament</div>
+                      <div className="text-sm font-bold text-amber-700">{companion?.temperament || 'Calm'}</div>
+                    </div>
+                  </div>
+
+                  {/* Bond Level */}
+                  <div className="mt-4 p-3 bg-pink-50 rounded-xl">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-pink-500">Bond Level</span>
+                      <span className="text-xs font-bold text-pink-700">{companion?.bond_level || 0}/100</span>
+                    </div>
+                    <div className="h-2 bg-pink-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-pink-400 rounded-full transition-all"
+                        style={{ width: `${companion?.bond_level || 0}%` }}
+                      />
+                    </div>
+                  </div>
                 </motion.div>
+
+                <BrainExportPanel companion={companion} subscription={subscription} />
               </TabsContent>
             </Tabs>
           </div>
