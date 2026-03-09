@@ -14,7 +14,8 @@ import {
   Sparkles,
   TrendingUp,
   Swords,
-  Brain
+  Brain,
+  BarChart3
 } from 'lucide-react';
 
 import CompanionAvatar from '@/components/companion/CompanionAvatar';
@@ -182,6 +183,14 @@ export default function Home() {
               onClick={() => navigate(createPageUrl('Store'))}
             >
               <ShoppingBag className="w-5 h-5" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate(createPageUrl('CompanionDashboard'))}
+              title="Dashboard"
+            >
+              <BarChart3 className="w-5 h-5" />
             </Button>
             <Button 
               variant="ghost" 

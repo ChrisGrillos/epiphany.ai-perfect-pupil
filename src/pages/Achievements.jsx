@@ -17,29 +17,47 @@ import {
 } from 'lucide-react';
 
 const ACHIEVEMENT_DEFINITIONS = [
-  // Care Achievements
-  { key: 'first_feed', name: 'First Meal', description: 'Feed your companion for the first time', icon: Heart, category: 'care', xp: 10, requirement: 1 },
-  { key: 'fed_10', name: 'Caring Friend', description: 'Feed your companion 10 times', icon: Heart, category: 'care', xp: 25, requirement: 10 },
-  { key: 'fed_50', name: 'Devoted Caretaker', description: 'Feed your companion 50 times', icon: Heart, category: 'care', xp: 100, requirement: 50 },
+  // Care
+  { key: 'first_feed', name: 'First Meal', description: 'Feed your companion for the first time', icon: Heart, category: 'care', xp: 10 },
+  { key: 'fed_10', name: 'Caring Friend', description: 'Feed your companion 10 times', icon: Heart, category: 'care', xp: 25 },
+  { key: 'fed_50', name: 'Devoted Caretaker', description: 'Feed your companion 50 times', icon: Heart, category: 'care', xp: 100 },
+  { key: 'first_exercise', name: 'First Workout', description: 'Exercise with your companion', icon: Heart, category: 'care', xp: 10 },
+  { key: 'exercise_20', name: 'Fitness Buff', description: 'Exercise 20 times', icon: Heart, category: 'care', xp: 50 },
+  { key: 'total_actions_100', name: 'Active Caretaker', description: '100 total care actions', icon: Heart, category: 'care', xp: 150 },
+  { key: 'total_actions_500', name: 'Legendary Caretaker', description: '500 total care actions', icon: Heart, category: 'care', xp: 500 },
   
-  // Learning Achievements
-  { key: 'first_study', name: 'First Lesson', description: 'Study with your companion', icon: Brain, category: 'learning', xp: 10, requirement: 1 },
-  { key: 'knowledge_25', name: 'Quick Learner', description: 'Reach 25% knowledge', icon: Brain, category: 'learning', xp: 50, requirement: 25 },
-  { key: 'knowledge_50', name: 'Scholar', description: 'Reach 50% knowledge', icon: Brain, category: 'learning', xp: 100, requirement: 50 },
-  { key: 'knowledge_100', name: 'Genius', description: 'Reach 100% knowledge', icon: Brain, category: 'learning', xp: 500, requirement: 100 },
+  // Learning
+  { key: 'first_study', name: 'First Lesson', description: 'Study with your companion', icon: Brain, category: 'learning', xp: 10 },
+  { key: 'knowledge_25', name: 'Quick Learner', description: 'Reach 25 knowledge', icon: Brain, category: 'learning', xp: 50 },
+  { key: 'knowledge_50', name: 'Scholar', description: 'Reach 50 knowledge', icon: Brain, category: 'learning', xp: 100 },
+  { key: 'knowledge_100', name: 'Genius', description: 'Reach 100 knowledge', icon: Brain, category: 'learning', xp: 500 },
+  { key: 'first_memory', name: 'First Memory', description: 'Your companion forms its first memory', icon: Brain, category: 'learning', xp: 15 },
+  { key: 'memories_20', name: 'Deep Mind', description: 'Companion has 20+ memories', icon: Brain, category: 'learning', xp: 75 },
+  { key: 'first_rule', name: 'Rule Maker', description: 'Create your first behavior rule', icon: Brain, category: 'learning', xp: 20 },
   
-  // Evolution Achievements
-  { key: 'first_puzzle', name: 'DNA Pioneer', description: 'Complete your first evolution puzzle', icon: Sparkles, category: 'evolution', xp: 50, requirement: 1 },
-  { key: 'puzzles_10', name: 'Evolution Master', description: 'Complete 10 evolution puzzles', icon: Sparkles, category: 'evolution', xp: 200, requirement: 10 },
+  // Evolution
+  { key: 'first_puzzle', name: 'DNA Pioneer', description: 'Complete your first evolution puzzle', icon: Sparkles, category: 'evolution', xp: 50 },
+  { key: 'puzzles_10', name: 'Evolution Master', description: 'Complete 10 evolution puzzles', icon: Sparkles, category: 'evolution', xp: 200 },
+  { key: 'evolved_child', name: 'Growing Up', description: 'Evolve to child stage', icon: Sparkles, category: 'evolution', xp: 50 },
+  { key: 'evolved_teenager', name: 'Coming of Age', description: 'Evolve to teenager stage', icon: Sparkles, category: 'evolution', xp: 100 },
+  { key: 'evolved_adult', name: 'Full Bloom', description: 'Evolve to adult stage', icon: Sparkles, category: 'evolution', xp: 300 },
+  { key: 'chose_path', name: 'Destiny Chosen', description: 'Choose an evolution path', icon: Sparkles, category: 'evolution', xp: 75 },
+
+  // Social/Bond
+  { key: 'trust_25', name: 'Building Trust', description: 'Reach 25 trust level', icon: Users, category: 'social', xp: 25 },
+  { key: 'trust_50', name: 'True Bond', description: 'Reach 50 trust level', icon: Users, category: 'social', xp: 75 },
+  { key: 'trust_100', name: 'Soulmates', description: 'Reach 100 trust level', icon: Users, category: 'social', xp: 250 },
+  { key: 'bond_25', name: 'Growing Bond', description: 'Reach 25 bond level', icon: Users, category: 'social', xp: 30 },
+  { key: 'bond_50', name: 'Strong Bond', description: 'Reach 50 bond level', icon: Users, category: 'social', xp: 80 },
+  { key: 'bond_100', name: 'Unbreakable Bond', description: 'Reach 100 bond level', icon: Users, category: 'social', xp: 300 },
   
-  // Social Achievements
-  { key: 'trust_25', name: 'Building Trust', description: 'Reach 25% trust level', icon: Users, category: 'social', xp: 25, requirement: 25 },
-  { key: 'trust_50', name: 'True Bond', description: 'Reach 50% trust level', icon: Users, category: 'social', xp: 75, requirement: 50 },
-  { key: 'trust_100', name: 'Soulmates', description: 'Reach 100% trust level', icon: Users, category: 'social', xp: 250, requirement: 100 },
-  
-  // Special Achievements
-  { key: 'all_stats_50', name: 'Balanced Growth', description: 'All stats above 50%', icon: Trophy, category: 'special', xp: 100, requirement: 1 },
-  { key: 'week_streak', name: 'Dedicated', description: 'Care for 7 days in a row', icon: Trophy, category: 'special', xp: 150, requirement: 7 }
+  // Battle
+  { key: 'first_battle', name: 'First Blood', description: 'Complete your first battle', icon: Trophy, category: 'special', xp: 20 },
+  { key: 'battles_10', name: 'Veteran', description: 'Complete 10 battles', icon: Trophy, category: 'special', xp: 75 },
+  { key: 'battles_50', name: 'War Hero', description: 'Complete 50 battles', icon: Trophy, category: 'special', xp: 250 },
+
+  // Special
+  { key: 'all_stats_50', name: 'Balanced Growth', description: 'All core stats above 50', icon: Trophy, category: 'special', xp: 100 },
 ];
 
 const CATEGORY_COLORS = {
@@ -78,19 +96,24 @@ export default function Achievements() {
   
   const getProgress = (achievement) => {
     if (!companion) return 0;
+    if (isUnlocked(achievement.key)) return 100;
     
-    switch (achievement.key) {
-      case 'knowledge_25':
-      case 'knowledge_50':
-      case 'knowledge_100':
-        return Math.min(100, (companion.knowledge_level / achievement.requirement) * 100);
-      case 'trust_25':
-      case 'trust_50':
-      case 'trust_100':
-        return Math.min(100, (companion.trust_level / achievement.requirement) * 100);
-      default:
-        return isUnlocked(achievement.key) ? 100 : 0;
-    }
+    const progressMap = {
+      knowledge_25: () => Math.min(100, ((companion.knowledge_level || 0) / 25) * 100),
+      knowledge_50: () => Math.min(100, ((companion.knowledge_level || 0) / 50) * 100),
+      knowledge_100: () => Math.min(100, ((companion.knowledge_level || 0) / 100) * 100),
+      trust_25: () => Math.min(100, ((companion.trust_level || 0) / 25) * 100),
+      trust_50: () => Math.min(100, ((companion.trust_level || 0) / 50) * 100),
+      trust_100: () => Math.min(100, ((companion.trust_level || 0) / 100) * 100),
+      bond_25: () => Math.min(100, ((companion.bond_level || 0) / 25) * 100),
+      bond_50: () => Math.min(100, ((companion.bond_level || 0) / 50) * 100),
+      bond_100: () => Math.min(100, ((companion.bond_level || 0) / 100) * 100),
+      total_actions_100: () => Math.min(100, ((companion.total_care_actions || 0) / 100) * 100),
+      total_actions_500: () => Math.min(100, ((companion.total_care_actions || 0) / 500) * 100),
+    };
+
+    const fn = progressMap[achievement.key];
+    return fn ? fn() : 0;
   };
   
   const totalXP = achievements.reduce((sum, a) => {
