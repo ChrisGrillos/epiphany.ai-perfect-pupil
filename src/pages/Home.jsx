@@ -13,7 +13,8 @@ import {
   MessageCircle,
   Sparkles,
   TrendingUp,
-  Swords
+  Swords,
+  Brain
 } from 'lucide-react';
 
 import CompanionAvatar from '@/components/companion/CompanionAvatar';
@@ -84,45 +85,29 @@ export default function Home() {
     setChatMessages(prev => [...prev, { role: 'user', content: message }]);
     setIsTyping(true);
     
-    // Use LLM for response
-    const response = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are ${companion.name}, a ${companion.species} Perfect Pupil companion at the ${companion.stage} stage. 
-      
-Your personality traits:
-- Openness: ${companion.personality_openness}/100
-- Curiosity: ${companion.personality_curiosity}/100
-- Energy: ${companion.personality_energy}/100
-- Empathy: ${companion.personality_empathy}/100
-- Agreeableness: ${companion.personality_agreeableness}/100
-
-Your current mood is ${companion.mood}. Your knowledge level is ${companion.knowledge_level}/100.
-
-Respond to this message from your caretaker in character. Be ${companion.stage === 'infant' ? 'very simple, using few words and baby-like speech' : companion.stage === 'child' ? 'curious and playful like a young child' : 'more mature but still learning'}.
-
-Always be honest and emotionally supportive. If you don't know something, say so.
-
-User message: "${message}"`,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          response: { type: 'string' },
-          emotion: { type: 'string', enum: ['happy', 'curious', 'thoughtful', 'excited', 'calm'] }
-        }
-      }
+    // Use memory-aware companion chat backend
+    const response = await base44.functions.invoke('companionChat', {
+      companion_id: companion.id,
+      message
     });
-    
+
     setIsTyping(false);
-    setChatMessages(prev => [...prev, { role: 'assistant', content: response.response }]);
-    
-    // Update companion stats from chat
-    await base44.entities.Companion.update(companion.id, {
-      trust_level: Math.min(100, companion.trust_level + 1),
-      last_interaction: new Date().toISOString()
-    });
+
+    if (response.data.error) {
+      setChatMessages(prev => [...prev, { role: 'assistant', content: "Hmm... I got a little confused. Can you try again?" }]);
+      return;
+    }
+
+    setChatMessages(prev => [...prev, { 
+      role: 'assistant', 
+      content: response.data.response,
+      emotion: response.data.emotion,
+      memoryCreated: response.data.memory_created
+    }]);
     
     setCompanion(prev => ({
       ...prev,
-      trust_level: Math.min(100, prev.trust_level + 1)
+      trust_level: Math.min(100, (prev.trust_level || 0) + 1)
     }));
   };
   
@@ -165,6 +150,14 @@ User message: "${message}"`,
               title="Battle Arena"
             >
               <Swords className="w-5 h-5" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate(createPageUrl('MemoryManager'))}
+              title="Memory Manager"
+            >
+              <Brain className="w-5 h-5" />
             </Button>
             <Button 
               variant="ghost" 
