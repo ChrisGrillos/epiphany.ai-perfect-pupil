@@ -12,7 +12,8 @@ import {
   Trophy, 
   MessageCircle,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  Swords
 } from 'lucide-react';
 
 import CompanionAvatar from '@/components/companion/CompanionAvatar';
@@ -52,73 +53,27 @@ export default function Home() {
   
   const handleAction = async (actionType) => {
     if (!companion) return;
-    setActionInProgress(true);
     
-    let statChanges = {};
-    let response = '';
-    
-    switch (actionType) {
-      case 'feed':
-        statChanges = {
-          hunger: Math.min(100, companion.hunger + 15),
-          happiness: Math.min(100, companion.happiness + 5),
-          trust_level: Math.min(100, companion.trust_level + 2)
-        };
-        response = generateFeedResponse(companion);
-        break;
-        
-      case 'exercise':
-        statChanges = {
-          fitness: Math.min(100, companion.fitness + 10),
-          hunger: Math.max(0, companion.hunger - 10),
-          happiness: Math.min(100, companion.happiness + 8),
-          personality_energy: Math.min(100, companion.personality_energy + 3)
-        };
-        response = generateExerciseResponse(companion);
-        break;
-        
-      case 'study':
-        statChanges = {
-          knowledge_level: Math.min(100, companion.knowledge_level + 5),
-          happiness: Math.min(100, companion.happiness + 3),
-          personality_curiosity: Math.min(100, companion.personality_curiosity + 2)
-        };
-        response = generateStudyResponse(companion);
-        break;
-        
-      case 'interact':
-        statChanges = {
-          happiness: Math.min(100, companion.happiness + 10),
-          trust_level: Math.min(100, companion.trust_level + 5),
-          affection_level: Math.min(100, companion.affection_level + 3),
-          personality_empathy: Math.min(100, companion.personality_empathy + 2)
-        };
-        response = generateInteractResponse(companion);
-        break;
-        
-      case 'gift':
-        navigate(createPageUrl('Store'));
-        setActionInProgress(false);
-        return;
+    if (actionType === 'gift') {
+      navigate(createPageUrl('Store'));
+      return;
     }
     
-    // Update mood based on stats
-    const newMood = calculateMood({ ...companion, ...statChanges });
-    statChanges.mood = newMood;
+    setActionInProgress(true);
     
-    // Update companion
-    await base44.entities.Companion.update(companion.id, statChanges);
-    
-    // Log interaction
-    await base44.entities.InteractionLog.create({
+    const response = await base44.functions.invoke('applyCompanionAction', {
       companion_id: companion.id,
-      action_type: actionType,
-      stat_changes: statChanges,
-      companion_response: response
+      action_type: actionType
     });
-    
-    setCompanion({ ...companion, ...statChanges });
-    toast.success(response);
+
+    if (response.data.error) {
+      toast.error(response.data.error);
+      setActionInProgress(false);
+      return;
+    }
+
+    setCompanion(response.data.companion);
+    toast.success(response.data.response_text);
     setActionInProgress(false);
   };
   
@@ -202,6 +157,14 @@ User message: "${message}"`,
           </div>
           
           <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate(createPageUrl('Battle'))}
+              title="Battle Arena"
+            >
+              <Swords className="w-5 h-5" />
+            </Button>
             <Button 
               variant="ghost" 
               size="icon"
@@ -350,54 +313,6 @@ User message: "${message}"`,
       </main>
     </div>
   );
-}
-
-// Helper functions
-function generateFeedResponse(companion) {
-  const responses = [
-    `${companion.name} happily munches on the treat!`,
-    `Yummy! ${companion.name} loves it!`,
-    `${companion.name}'s tummy is happy now!`
-  ];
-  return responses[Math.floor(Math.random() * responses.length)];
-}
-
-function generateExerciseResponse(companion) {
-  const responses = [
-    `${companion.name} bounces around energetically!`,
-    `What a workout! ${companion.name} is getting stronger!`,
-    `${companion.name} loves playtime!`
-  ];
-  return responses[Math.floor(Math.random() * responses.length)];
-}
-
-function generateStudyResponse(companion) {
-  const responses = [
-    `${companion.name} learned something new today!`,
-    `${companion.name}'s curiosity is growing!`,
-    `Knowledge is power! ${companion.name} is getting smarter!`
-  ];
-  return responses[Math.floor(Math.random() * responses.length)];
-}
-
-function generateInteractResponse(companion) {
-  const responses = [
-    `${companion.name} feels so loved!`,
-    `Your bond with ${companion.name} grows stronger!`,
-    `${companion.name} appreciates the attention!`
-  ];
-  return responses[Math.floor(Math.random() * responses.length)];
-}
-
-function calculateMood(companion) {
-  const avgStats = (companion.hunger + companion.happiness + companion.fitness) / 3;
-  
-  if (avgStats >= 80) return 'joyful';
-  if (avgStats >= 60) return 'content';
-  if (avgStats >= 40) return 'neutral';
-  if (companion.hunger < 30) return 'tired';
-  if (companion.happiness < 30) return 'sad';
-  return 'neutral';
 }
 
 function getMoodEmoji(mood) {
