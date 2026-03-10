@@ -7,7 +7,7 @@ import {
   resolveUserEntitlements
 } from './_serverUtils.ts';
 
-const EVOLUTION_PATHS: Record<string, { requiredTraits: Record<string, number>; signatureAbility: string; subtypes: Record<string, string> }> = {
+const EVOLUTION_PATHS = {
   Guardian: {
     requiredTraits: { nurturing: 10, disciplined: 8 },
     signatureAbility: 'Unbreakable Vow: Absorb all damage targeted at allies for 2 turns',
@@ -64,7 +64,7 @@ const EVOLUTION_PATHS: Record<string, { requiredTraits: Record<string, number>; 
   }
 };
 
-function hasRequiredTraits(companion: any, requiredTraits: Record<string, number>): boolean {
+function hasRequiredTraits(companion, requiredTraits) {
   const affinity = companion?.trait_affinity || {};
   for (const [trait, minimum] of Object.entries(requiredTraits)) {
     if (Number(affinity?.[trait] || 0) < Number(minimum || 0)) {
@@ -124,7 +124,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Trait affinity requirements are not met for this evolution path.' }, { status: 403 });
     }
 
-    const updatePayload: Record<string, any> = {
+    const updatePayload = {
       evolution_path: evolutionPath,
       subtype,
       signature_passive: signaturePassive,

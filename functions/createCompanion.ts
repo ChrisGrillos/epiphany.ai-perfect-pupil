@@ -7,18 +7,18 @@ import {
   resolveUserEntitlements
 } from './_serverUtils.ts';
 
-const STARTING_STAGE_STATS: Record<string, { knowledge_level: number; personality_openness: number }> = {
+const STARTING_STAGE_STATS = {
   infant: { knowledge_level: 5, personality_openness: 30 },
   child: { knowledge_level: 30, personality_openness: 50 },
   teenager: { knowledge_level: 60, personality_openness: 70 }
 };
 
-function normalizeStage(raw: any): string {
+function normalizeStage(raw) {
   const stage = String(raw || 'child').trim().toLowerCase();
   return STARTING_STAGE_STATS[stage] ? stage : 'child';
 }
 
-function normalizeSpecies(raw: any): string {
+function normalizeSpecies(raw) {
   const species = String(raw || 'celestial').trim().toLowerCase();
   return species || 'celestial';
 }

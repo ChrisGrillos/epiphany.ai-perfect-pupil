@@ -6,14 +6,14 @@ import {
   resolveUserEntitlements
 } from './_serverUtils.ts';
 
-const DIFFICULTY_XP_MULTIPLIER: Record<string, number> = {
+const DIFFICULTY_XP_MULTIPLIER = {
   easy: 1,
   medium: 2,
   hard: 3,
   expert: 4
 };
 
-function normalizeDifficulty(raw: any): string {
+function normalizeDifficulty(raw) {
   const difficulty = String(raw || 'easy').trim().toLowerCase();
   return DIFFICULTY_XP_MULTIPLIER[difficulty] ? difficulty : 'easy';
 }

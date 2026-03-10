@@ -6,7 +6,7 @@ import {
   resolveUserEntitlements
 } from './_serverUtils.ts';
 
-const PROVIDER_RULES: Record<string, { minTier: string; requiresKey: boolean; models?: string[] }> = {
+const PROVIDER_RULES = {
   default: { minTier: 'free', requiresKey: false },
   openai: { minTier: 'premium', requiresKey: true, models: ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'] },
   anthropic: { minTier: 'premium', requiresKey: true, models: ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'] },
@@ -14,7 +14,7 @@ const PROVIDER_RULES: Record<string, { minTier: string; requiresKey: boolean; mo
   custom: { minTier: 'elite', requiresKey: true }
 };
 
-function sortByRecency(rows: any[]): any[] {
+function sortByRecency(rows) {
   return [...(rows || [])].sort((a, b) => {
     const aTs = new Date(a?.updated_date || a?.created_date || 0).getTime();
     const bTs = new Date(b?.updated_date || b?.created_date || 0).getTime();
@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Custom provider requires api_endpoint.' }, { status: 400 });
     }
 
-    const upsertPayload: Record<string, any> = {
+    const upsertPayload = {
       provider_name: providerName,
       api_endpoint: apiEndpoint,
       model_name: requestedModel || null,
@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
       upsertPayload.api_key = apiKey;
     }
 
-    let config: any = null;
+    let config = null;
     if (primary?.id) {
       config = await base44.asServiceRole.entities.AIProviderConfig.update(primary.id, upsertPayload);
       for (const row of rows.slice(1)) {

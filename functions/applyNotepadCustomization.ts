@@ -7,14 +7,14 @@ import {
   resolveUserEntitlements
 } from './_serverUtils.ts';
 
-const CUSTOMIZATION_LIMITS: Record<string, { traits: number; memories: number; rules: number }> = {
+const CUSTOMIZATION_LIMITS = {
   free: { traits: 0, memories: 0, rules: 0 },
   basic: { traits: 3, memories: 5, rules: 2 },
   premium: { traits: 10, memories: 20, rules: 10 },
   elite: { traits: 999, memories: 999, rules: 999 }
 };
 
-const TRAIT_FIELD_MAP: Record<string, string> = {
+const TRAIT_FIELD_MAP = {
   wit: 'personality_openness',
   witty: 'personality_openness',
   calm: 'personality_agreeableness',
@@ -166,7 +166,7 @@ Be specific and actionable. If the input is vague, make reasonable interpretatio
       createdRules.push(created);
     }
 
-    const traitUpdates: Record<string, number> = {};
+    const traitUpdates = {};
     for (const trait of traitsToApply) {
       const key = String(trait?.name || '').trim().toLowerCase();
       const field = TRAIT_FIELD_MAP[key];

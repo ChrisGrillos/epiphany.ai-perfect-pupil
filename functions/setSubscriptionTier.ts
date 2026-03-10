@@ -8,21 +8,21 @@ import {
   resolveUserEntitlements
 } from './_serverUtils.ts';
 
-const MONTHLY_PRICES: Record<string, number> = {
+const MONTHLY_PRICES = {
   free: 0,
   basic: 0.99,
   premium: 4.99,
   elite: 9.99
 };
 
-const TIER_FEATURES: Record<string, string[]> = {
+const TIER_FEATURES = {
   free: ['basic_view', 'limited_chat'],
   basic: ['full_care', 'unlimited_chat', 'store_access', 'brain_export', 'achievements'],
   premium: ['full_care', 'unlimited_chat', 'store_access', 'brain_export', 'achievements', 'evolution_control', 'customization'],
   elite: ['full_care', 'unlimited_chat', 'store_access', 'brain_export', 'achievements', 'evolution_control', 'customization', 'puzzles', 'advanced_personalization']
 };
 
-function sortByRecency(rows: any[]): any[] {
+function sortByRecency(rows) {
   return [...(rows || [])].sort((a, b) => {
     const aTs = new Date(a?.updated_date || a?.created_date || 0).getTime();
     const bTs = new Date(b?.updated_date || b?.created_date || 0).getTime();
@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
       features: TIER_FEATURES[requestedTier]
     };
 
-    let subscription: any = null;
+    let subscription = null;
     if (primary?.id) {
       subscription = await base44.asServiceRole.entities.Subscription.update(primary.id, subscriptionPayload);
       for (const row of subscriptionRows.slice(1)) {
