@@ -14,7 +14,7 @@ const RANK_ICONS = [Trophy, Medal, Award];
 export default function Leaderboard({ roster }) {
   if (!roster || roster.length === 0) {
     return (
-      <div className="text-center py-8 text-slate-400">
+      <div className="text-center py-8 text-muted-foreground">
         <Trophy className="w-10 h-10 mx-auto mb-2 opacity-40" />
         <p className="text-sm">No roster units yet — recruit some in battle!</p>
       </div>
@@ -43,14 +43,14 @@ export default function Leaderboard({ roster }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
             className={`flex items-center gap-3 p-3 rounded-xl border ${
-              i < 3 ? RANK_COLORS[i] : 'bg-white border-slate-200'
+              i < 3 ? RANK_COLORS[i] : 'bg-card border-border'
             }`}
           >
             <div className="w-8 text-center font-bold text-lg">
               {i < 3 && RankIcon ? (
                 <RankIcon className="w-5 h-5 mx-auto" />
               ) : (
-                <span className="text-slate-400">#{i + 1}</span>
+                <span className="text-muted-foreground">#{i + 1}</span>
               )}
             </div>
 
@@ -59,7 +59,7 @@ export default function Leaderboard({ roster }) {
                 <span className="font-semibold text-sm truncate">{unit.creature_name || unit.creature_template}</span>
                 <Badge variant="outline" className="text-xs capitalize">{unit.element}</Badge>
               </div>
-              <div className="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
+              <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                 <span>{unit.total_battles || 0} battles</span>
                 <span>{unit.wins || 0}W / {unit.losses || 0}L</span>
                 <span>{winRate}% WR</span>
@@ -68,7 +68,7 @@ export default function Leaderboard({ roster }) {
 
             <div className="text-right">
               <div className="text-sm font-bold text-violet-600">{unit.total_xp || 0}</div>
-              <div className="text-xs text-slate-400">XP</div>
+              <div className="text-xs text-muted-foreground">XP</div>
             </div>
           </motion.div>
         );

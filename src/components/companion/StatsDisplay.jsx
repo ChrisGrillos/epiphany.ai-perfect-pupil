@@ -58,7 +58,7 @@ export default function StatsDisplay({ companion, compact = false }) {
               <div className={`p-1 rounded-md ${config.bgColor}`}>
                 <Icon className="w-3.5 h-3.5" style={{ color: config.color.replace('bg-', '#').replace('-500', '') }} />
               </div>
-              <span className="text-xs font-medium text-slate-600">{value}</span>
+              <span className="text-xs font-medium text-muted-foreground">{value}</span>
             </div>
           );
         })}
@@ -84,14 +84,14 @@ export default function StatsDisplay({ companion, compact = false }) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className={`p-1.5 rounded-lg ${config.bgColor}`}>
-                  <Icon className="w-4 h-4 text-slate-700" />
+                  <Icon className="w-4 h-4 text-foreground" />
                 </div>
-                <span className="text-sm font-medium text-slate-700">{config.label}</span>
+                <span className="text-sm font-medium text-foreground">{config.label}</span>
               </div>
-              <span className="text-sm font-semibold text-slate-900">{value}%</span>
+              <span className="text-sm font-semibold text-foreground">{value}%</span>
             </div>
             
-            <div className="relative h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div className="relative h-2 rounded-full bg-muted overflow-hidden">
               <motion.div
                 className={`absolute inset-y-0 left-0 rounded-full ${config.color}`}
                 initial={{ width: 0 }}
@@ -100,7 +100,7 @@ export default function StatsDisplay({ companion, compact = false }) {
               />
             </div>
             
-            <p className="text-xs text-slate-500">{config.description}</p>
+            <p className="text-xs text-muted-foreground">{config.description}</p>
           </motion.div>
         );
       })}

@@ -40,7 +40,7 @@ export default function ChatInterface({
   };
   
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-slate-50 to-white rounded-2xl border border-slate-200 overflow-hidden">
+    <div className="flex flex-col h-full bg-gradient-to-b from-muted to-background rounded-2xl border border-border overflow-hidden">
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
@@ -52,10 +52,10 @@ export default function ChatInterface({
             >
               {getCompanionEmoji()}
             </motion.div>
-            <h3 className="text-lg font-semibold text-slate-700 mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               Say hello to {companion?.name || 'your companion'}!
             </h3>
-            <p className="text-sm text-slate-500 max-w-xs">
+            <p className="text-sm text-muted-foreground max-w-xs">
               Chat with your Perfect Pupil to build trust, teach new things, and watch them grow.
             </p>
           </div>
@@ -76,14 +76,14 @@ export default function ChatInterface({
                   max-w-[80%] rounded-2xl px-4 py-3
                   ${message.role === 'user' 
                     ? 'bg-violet-600 text-white rounded-br-md' 
-                    : 'bg-white border border-slate-200 text-slate-700 rounded-bl-md shadow-sm'
+                    : 'bg-card border border-border text-foreground rounded-bl-md shadow-sm'
                   }
                 `}
               >
                 {message.role !== 'user' && (
                   <div className="flex items-center gap-1.5 mb-1">
                     <span className="text-sm">{getCompanionEmoji()}</span>
-                    <span className="text-xs font-medium text-slate-500">
+                    <span className="text-xs font-medium text-muted-foreground">
                       {companion?.name || 'Companion'}
                     </span>
                     {message.emotion && (
@@ -120,7 +120,7 @@ export default function ChatInterface({
               exit={{ opacity: 0, y: -10 }}
               className="flex justify-start"
             >
-              <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+              <div className="bg-card border border-border rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm">{getCompanionEmoji()}</span>
                   <div className="flex gap-1">
@@ -143,7 +143,7 @@ export default function ChatInterface({
       </div>
       
       {/* Input Area */}
-      <form onSubmit={handleSubmit} className="p-4 border-t border-slate-100">
+      <form onSubmit={handleSubmit} className="p-4 border-t border-border">
         <div className="flex gap-2">
           <Input
             ref={inputRef}
@@ -151,7 +151,7 @@ export default function ChatInterface({
             onChange={(e) => setInput(e.target.value)}
             placeholder={`Message ${companion?.name || 'your companion'}...`}
             disabled={disabled || isTyping}
-            className="flex-1 rounded-xl border-slate-200 focus:border-violet-400 focus:ring-violet-400"
+            className="flex-1 rounded-xl border-border focus:border-violet-400 focus:ring-violet-400"
           />
           <Button
             type="submit"

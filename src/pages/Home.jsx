@@ -67,6 +67,26 @@ export default function Home() {
     }
     
     setActionInProgress(true);
+
+    // Optimistic update: apply expected stat changes immediately
+    const OPTIMISTIC_DELTAS = {
+      feed: { hunger: 15, happiness: 5 },
+      exercise: { fitness: 10, happiness: 8, hunger: -10 },
+      study: { knowledge_level: 5, happiness: 3 },
+      interact: { happiness: 10, trust_level: 5 },
+      play: { happiness: 12, fitness: 5, hunger: -5 }
+    };
+    const deltas = OPTIMISTIC_DELTAS[actionType];
+    const previousCompanion = companion;
+    if (deltas) {
+      setCompanion(prev => {
+        const updated = { ...prev };
+        for (const [stat, delta] of Object.entries(deltas)) {
+          updated[stat] = Math.max(0, Math.min(100, (prev[stat] || 0) + delta));
+        }
+        return updated;
+      });
+    }
     
     const response = await base44.functions.invoke('applyCompanionAction', {
       companion_id: companion.id,
@@ -74,11 +94,14 @@ export default function Home() {
     });
 
     if (response.data.error) {
+      // Rollback on error
+      setCompanion(previousCompanion);
       toast.error(response.data.error);
       setActionInProgress(false);
       return;
     }
 
+    // Reconcile with server truth
     setCompanion(response.data.companion);
     toast.success(response.data.response_text);
     setActionInProgress(false);
@@ -131,7 +154,7 @@ export default function Home() {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-cyan-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
@@ -144,15 +167,15 @@ export default function Home() {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-cyan-50 pb-16 md:pb-0">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       {/* Header - hidden on mobile, shown on desktop */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 hidden md:block">
+      <header className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-40 hidden md:block">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">✨</span>
             <div>
-              <h1 className="font-bold text-slate-800">Epiphany.AI</h1>
-              <p className="text-xs text-slate-500">Perfect Pupil™</p>
+              <h1 className="font-bold text-foreground">Epiphany.AI</h1>
+              <p className="text-xs text-muted-foreground">Perfect Pupil™</p>
             </div>
           </div>
           
@@ -183,11 +206,11 @@ export default function Home() {
       </header>
 
       {/* Mobile header - compact */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 md:hidden">
+      <header className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-40 md:hidden">
         <div className="px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xl">✨</span>
-            <h1 className="font-bold text-slate-800 text-sm">Epiphany.AI</h1>
+            <h1 className="font-bold text-foreground text-sm">Epiphany.AI</h1>
           </div>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" className="select-none h-9 w-9" onClick={() => navigate(createPageUrl('MemoryManager'))}>
@@ -215,8 +238,8 @@ export default function Home() {
             >
               {/* Companion Name & Level */}
               <div className="text-center mb-4">
-                <h2 className="text-2xl font-bold text-slate-800">{companion?.name}</h2>
-                <p className="text-sm text-slate-500 capitalize">
+                <h2 className="text-2xl font-bold text-foreground">{companion?.name}</h2>
+                <p className="text-sm text-muted-foreground capitalize">
                   {companion?.stage} • {companion?.species}
                 </p>
                 <div className="flex items-center justify-center gap-2 mt-1">
@@ -226,7 +249,7 @@ export default function Home() {
                   </span>
                 </div>
                 <div className="flex items-center justify-center gap-2 mt-1">
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-muted-foreground">
                     {companion?.build_archetype || 'Adaptive'} · {companion?.temperament || 'Calm'}
                   </span>
                 </div>
@@ -239,9 +262,9 @@ export default function Home() {
               
               {/* Mood Indicator */}
               <div className="text-center mb-6">
-                <span className="inline-flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-full">
+                <span className="inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-full">
                   <span className="text-lg">{getMoodEmoji(companion?.mood)}</span>
-                  <span className="text-sm font-medium text-slate-600 capitalize">
+                  <span className="text-sm font-medium text-muted-foreground capitalize">
                     {companion?.mood || 'content'}
                   </span>
                 </span>
@@ -255,7 +278,7 @@ export default function Home() {
           {/* Main Interaction Area */}
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="w-full bg-white border border-slate-200 rounded-xl p-1 mb-4">
+              <TabsList className="w-full bg-card border border-border rounded-xl p-1 mb-4">
                 <TabsTrigger value="care" className="flex-1 rounded-lg data-[state=active]:bg-violet-100 select-none">
                   <Sparkles className="w-4 h-4 mr-2" />
                   Care
@@ -274,9 +297,9 @@ export default function Home() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm"
+                  className="bg-card rounded-3xl p-6 border border-border shadow-sm"
                 >
-                  <h3 className="font-semibold text-slate-800 mb-4">
+                  <h3 className="font-semibold text-foreground mb-4">
                     Care for {companion?.name}
                   </h3>
                   <ActionButtons
@@ -310,9 +333,9 @@ export default function Home() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm"
+                  className="bg-card rounded-3xl p-6 border border-border shadow-sm"
                 >
-                  <h3 className="font-semibold text-slate-800 mb-6">
+                  <h3 className="font-semibold text-foreground mb-6">
                     {companion?.name}'s Stats
                   </h3>
                   <StatsDisplay companion={companion} />

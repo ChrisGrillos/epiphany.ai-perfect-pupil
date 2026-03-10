@@ -86,7 +86,7 @@ export default function TierCard({
     <motion.div
       whileHover={{ y: -8, scale: 1.02 }}
       className={`
-        relative bg-white rounded-3xl border-2 overflow-hidden
+        relative bg-card rounded-3xl border-2 overflow-hidden
         ${isCurrentTier ? 'border-violet-500 shadow-lg shadow-violet-100' : 'border-slate-200'}
         ${config.popular ? 'ring-2 ring-violet-500 ring-offset-4' : ''}
       `}
@@ -133,16 +133,16 @@ export default function TierCard({
               <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
                 <Check className="w-3 h-3 text-emerald-600" />
               </div>
-              <span className="text-slate-700">{feature}</span>
+              <span className="text-foreground">{feature}</span>
             </motion.li>
           ))}
           
           {config.limitations?.map((limitation, index) => (
             <li
               key={`limit-${index}`}
-              className="flex items-center gap-3 text-sm text-slate-400"
+              className="flex items-center gap-3 text-sm text-muted-foreground"
             >
-              <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+              <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                 <span className="text-xs">✕</span>
               </div>
               <span>{limitation}</span>
@@ -156,7 +156,7 @@ export default function TierCard({
           className={`
             w-full py-6 rounded-xl font-semibold text-base
             ${isCurrentTier 
-              ? 'bg-slate-100 text-slate-500 cursor-default' 
+              ? 'bg-muted text-muted-foreground cursor-default' 
               : `bg-gradient-to-r ${config.color} hover:opacity-90 text-white`
             }
           `}

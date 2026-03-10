@@ -32,7 +32,7 @@ function formatTimeAgo(dateStr) {
 export default function ActivityTimeline({ logs }) {
   if (!logs || logs.length === 0) {
     return (
-      <div className="text-center py-8 text-slate-400">
+      <div className="text-center py-8 text-muted-foreground">
         <Brain className="w-10 h-10 mx-auto mb-2 opacity-40" />
         <p className="text-sm">No activity yet</p>
       </div>
@@ -58,11 +58,11 @@ export default function ActivityTimeline({ logs }) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-700">{config.label}</span>
-                <span className="text-xs text-slate-400">{formatTimeAgo(log.created_date)}</span>
+                <span className="text-sm font-medium text-foreground">{config.label}</span>
+                <span className="text-xs text-muted-foreground">{formatTimeAgo(log.created_date)}</span>
               </div>
               {log.companion_response && (
-                <p className="text-xs text-slate-500 mt-0.5 truncate">{log.companion_response}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">{log.companion_response}</p>
               )}
               <div className="flex items-center gap-2 mt-1">
                 {log.xp_awarded > 0 && (

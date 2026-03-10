@@ -25,12 +25,12 @@ export default function CompanionProfile({ companion, roster }) {
   return (
     <div className="space-y-6">
       {/* Identity Card */}
-      <div className="bg-gradient-to-br from-violet-100 to-cyan-50 rounded-2xl p-6 text-center">
+      <div className="bg-gradient-to-br from-violet-100 to-cyan-50 dark:from-violet-950 dark:to-cyan-950 rounded-2xl p-6 text-center">
         <div className="flex justify-center mb-4">
           <CompanionAvatar companion={companion} size="large" />
         </div>
-        <h2 className="text-2xl font-bold text-slate-800">{companion.name}</h2>
-        <p className="text-sm text-slate-500 capitalize">{companion.stage} • {companion.species}</p>
+        <h2 className="text-2xl font-bold text-foreground">{companion.name}</h2>
+        <p className="text-sm text-muted-foreground capitalize">{companion.stage} • {companion.species}</p>
         
         <div className="flex justify-center gap-2 mt-3 flex-wrap">
           <Badge className="bg-violet-100 text-violet-700">{companion.build_archetype || 'Adaptive'}</Badge>
@@ -51,13 +51,13 @@ export default function CompanionProfile({ companion, roster }) {
       </div>
 
       {/* Trait Affinity Radar */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200">
-        <h3 className="font-semibold text-slate-700 text-sm mb-3">Trait Affinity</h3>
+      <div className="bg-card rounded-2xl p-4 border border-border">
+        <h3 className="font-semibold text-foreground text-sm mb-3">Trait Affinity</h3>
         <div className="space-y-2">
           {traitBars.map(trait => (
             <div key={trait.key} className="flex items-center gap-3">
-              <span className="text-xs text-slate-500 w-20">{trait.label}</span>
-              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+              <span className="text-xs text-muted-foreground w-20">{trait.label}</span>
+              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${(trait.value / maxAff) * 100}%` }}
@@ -65,15 +65,15 @@ export default function CompanionProfile({ companion, roster }) {
                   className={`h-full rounded-full ${trait.color}`}
                 />
               </div>
-              <span className="text-xs font-medium text-slate-600 w-8 text-right">{trait.value}</span>
+              <span className="text-xs font-medium text-muted-foreground w-8 text-right">{trait.value}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Combat Lifetime Stats */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200">
-        <h3 className="font-semibold text-slate-700 text-sm mb-3">Combat History</h3>
+      <div className="bg-card rounded-2xl p-4 border border-border">
+        <h3 className="font-semibold text-foreground text-sm mb-3">Combat History</h3>
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="p-2 bg-red-50 rounded-xl">
             <div className="text-lg font-bold text-red-600">{companion.combat_damage_dealt || 0}</div>
@@ -92,8 +92,8 @@ export default function CompanionProfile({ companion, roster }) {
 
       {/* Signature Abilities */}
       {companion.signature_passive && (
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 space-y-2">
-          <h3 className="font-semibold text-slate-700 text-sm">Signature Abilities</h3>
+        <div className="bg-card rounded-2xl p-4 border border-border space-y-2">
+          <h3 className="font-semibold text-foreground text-sm">Signature Abilities</h3>
           <div className="p-3 bg-amber-50 rounded-xl">
             <div className="text-xs text-amber-600 font-semibold flex items-center gap-1 mb-1">
               <Shield className="w-3 h-3" /> Passive
@@ -116,10 +116,10 @@ export default function CompanionProfile({ companion, roster }) {
 
 function StatBox({ icon: Icon, label, value, color }) {
   return (
-    <div className="bg-white rounded-xl p-3 border border-slate-200 text-center">
+    <div className="bg-card rounded-xl p-3 border border-border text-center">
       <Icon className={`w-5 h-5 mx-auto mb-1 ${color}`} />
-      <div className="text-lg font-bold text-slate-800">{value}</div>
-      <div className="text-xs text-slate-500">{label}</div>
+      <div className="text-lg font-bold text-foreground">{value}</div>
+      <div className="text-xs text-muted-foreground">{label}</div>
     </div>
   );
 }

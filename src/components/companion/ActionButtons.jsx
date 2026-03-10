@@ -125,15 +125,15 @@ export default function ActionButtons({
               disabled={disabled || hasCooldown}
               className={`
                 relative w-full h-20 flex flex-col items-center justify-center gap-1.5
-                ${isLocked ? 'bg-slate-200 hover:bg-slate-200 cursor-not-allowed' : action.color}
+                ${isLocked ? 'bg-muted hover:bg-muted cursor-not-allowed' : action.color}
                 text-white rounded-xl transition-all duration-200
                 ${isActive ? 'ring-2 ring-white ring-offset-2' : ''}
               `}
             >
               {isLocked ? (
                 <>
-                  <Lock className="w-5 h-5 text-slate-400" />
-                  <span className="text-xs text-slate-500">{action.tier}</span>
+                  <Lock className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{action.tier}</span>
                 </>
               ) : (
                 <>
