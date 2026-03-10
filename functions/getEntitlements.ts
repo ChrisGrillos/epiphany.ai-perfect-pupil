@@ -3,7 +3,7 @@ import {
   buildUserOwnerKeys,
   listOwnedRecords,
   resolveUserEntitlements
-} from './_serverUtils.ts';
+} from './_serverUtils.js';
 
 Deno.serve(async (req) => {
   try {
