@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Zap, Brain, Smile, Dumbbell } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
 
 const STAT_CONFIG = {
   hunger: {

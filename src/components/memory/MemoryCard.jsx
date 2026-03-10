@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { 
-  Brain, Star, Tag, Clock, ChevronDown, ChevronUp, 
+  Brain, Star, Clock, ChevronDown, ChevronUp, 
   Trash2, BookOpen, Heart, Zap, Lightbulb, Calendar
 } from 'lucide-react';
 

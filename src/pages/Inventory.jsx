@@ -12,8 +12,7 @@ import {
   Cookie,
   Pill,
   Palette,
-  Sparkles,
-  X
+  Sparkles
 } from 'lucide-react';
 
 const CATEGORY_ICONS = {

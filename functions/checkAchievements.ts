@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { buildUserOwnerKeys, getOwnedRecordById } from './_serverUtils.ts';
 
 /**
  * Phase 5: Achievement Checker
@@ -81,20 +82,27 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing companion_id' }, { status: 400 });
     }
 
-    // Fetch all relevant data
-    const [companions, existingAchievements, logs, memories, rules] = await Promise.all([
-      base44.entities.Companion.filter({ id: companion_id }),
-      base44.entities.Achievement.filter({}),
-      base44.entities.InteractionLog.filter({ companion_id }),
-      base44.entities.CompanionMemory.filter({ companion_id }),
-      base44.entities.BehaviorRule.filter({ companion_id })
+    const ownerKeys = buildUserOwnerKeys(user);
+    const companion = await getOwnedRecordById(base44, 'Companion', String(companion_id), ownerKeys);
+    if (!companion) {
+      return Response.json({ error: 'Companion not found or not owned by caller' }, { status: 404 });
+    }
+
+    // Keep this scoped to the current companion so one pet's unlocks do not block others.
+    const [existingAchievementsScoped, logs, memories, rules, legacyAchievements] = await Promise.all([
+      base44.asServiceRole.entities.Achievement.filter({ companion_id }),
+      base44.asServiceRole.entities.InteractionLog.filter({ companion_id }),
+      base44.asServiceRole.entities.CompanionMemory.filter({ companion_id }),
+      base44.asServiceRole.entities.BehaviorRule.filter({ companion_id }),
+      base44.entities.Achievement.filter({}).catch(() => []) // fallback for older rows missing companion_id
     ]);
 
-    if (!companions || companions.length === 0) {
-      return Response.json({ error: 'Companion not found' }, { status: 404 });
-    }
-    const companion = companions[0];
-    const existingKeys = new Set((existingAchievements || []).map(a => a.achievement_key));
+    const existingKeys = new Set([
+      ...(existingAchievementsScoped || []).map((a: any) => a.achievement_key),
+      ...(legacyAchievements || [])
+        .filter((a: any) => !a.companion_id)
+        .map((a: any) => a.achievement_key)
+    ]);
 
     const extra = {
       memoryCount: (memories || []).length,
@@ -102,6 +110,7 @@ Deno.serve(async (req) => {
     };
 
     const newlyUnlocked = [];
+    let awardedXpTotal = 0;
 
     for (const achCheck of ACHIEVEMENT_CHECKS) {
       if (existingKeys.has(achCheck.key)) continue;
@@ -115,25 +124,28 @@ Deno.serve(async (req) => {
 
       if (passed) {
         const xpReward = XP_REWARDS[achCheck.key] || 10;
-        await base44.entities.Achievement.create({
+        await base44.asServiceRole.entities.Achievement.create({
+          companion_id,
           achievement_key: achCheck.key,
           name: achCheck.key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
           category: achCheck.key.includes('feed') || achCheck.key.includes('exercise') ? 'care' :
                     achCheck.key.includes('knowledge') || achCheck.key.includes('study') ? 'learning' :
                     achCheck.key.includes('trust') || achCheck.key.includes('bond') ? 'social' :
-                    achCheck.key.includes('battle') ? 'care' :
+                    achCheck.key.includes('battle') ? 'battle' :
                     achCheck.key.includes('puzzle') || achCheck.key.includes('evolv') || achCheck.key.includes('path') ? 'evolution' : 'special',
           xp_reward: xpReward,
           unlocked_at: new Date().toISOString()
         });
 
         newlyUnlocked.push({ key: achCheck.key, xp: xpReward });
-
-        // Award XP to companion
-        await base44.entities.Companion.update(companion_id, {
-          experience_points: (companion.experience_points || 0) + xpReward
-        });
+        awardedXpTotal += xpReward;
       }
+    }
+
+    if (awardedXpTotal > 0) {
+      await base44.asServiceRole.entities.Companion.update(companion_id, {
+        experience_points: (companion.experience_points || 0) + awardedXpTotal
+      });
     }
 
     return Response.json({ newly_unlocked: newlyUnlocked });

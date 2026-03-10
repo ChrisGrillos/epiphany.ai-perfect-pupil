@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Cpu, Shield } from 'lucide-react';
 import AIProviderSetup from '@/components/customization/AIProviderSetup';
@@ -19,36 +18,26 @@ export default function AISettings() {
   }, []);
   
   const loadData = async () => {
-    const [configs, subs] = await Promise.all([
+    const [configs, subs, entitlementResponse] = await Promise.all([
       base44.entities.AIProviderConfig.list(),
-      base44.entities.Subscription.list()
+      base44.entities.Subscription.list(),
+      base44.functions.invoke('getEntitlements', {})
     ]);
     
     setAiConfig(configs[0]);
-    setSubscription(subs[0] || { tier: 'free' });
+    const entitlementTier = entitlementResponse?.data?.tier;
+    setSubscription(entitlementTier ? { tier: entitlementTier } : (subs[0] || { tier: 'free' }));
     setLoading(false);
   };
   
   const handleSaveConfig = async (configData) => {
-    // Note: In production, API keys should be encrypted server-side
-    // This is a simplified implementation
-    
-    if (aiConfig?.id) {
-      await base44.entities.AIProviderConfig.update(aiConfig.id, {
-        ...configData,
-        last_used: new Date().toISOString()
-      });
-    } else {
-      await base44.entities.AIProviderConfig.create({
-        ...configData,
-        is_active: true,
-        monthly_api_calls: 0
-      });
+    const response = await base44.functions.invoke('saveAIProviderConfig', configData);
+    if (response.data?.error) {
+      throw new Error(response.data.error);
     }
-    
-    // Reload config
+
     const configs = await base44.entities.AIProviderConfig.list();
-    setAiConfig(configs[0]);
+    setAiConfig(configs[0] || null);
   };
   
   if (loading) {

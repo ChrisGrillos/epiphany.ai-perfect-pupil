@@ -1,4 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import {
+  buildUserOwnerKeys,
+  clampStat,
+  isTierAtLeast,
+  resolveUserEntitlements,
+  recomputeCompanionIdentity,
+  getOwnedRecordById,
+  getUserCurrencyRecord
+} from './_serverUtils.ts';
 
 /**
  * Server-authoritative evolution attempt handler.
@@ -27,10 +36,6 @@ const PCP_REWARDS = {
   adult: 50
 };
 
-function clampStat(val, min = 0, max = 100) {
-  return Math.max(min, Math.min(max, val));
-}
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -45,12 +50,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing companion_id' }, { status: 400 });
     }
 
-    // Fetch companion
-    const companions = await base44.entities.Companion.filter({ id: companion_id });
-    if (!companions || companions.length === 0) {
-      return Response.json({ error: 'Companion not found' }, { status: 404 });
+    const ownerKeys = buildUserOwnerKeys(user);
+    const entitlements = await resolveUserEntitlements(base44, ownerKeys);
+    if (!isTierAtLeast(entitlements.tier, 'premium')) {
+      return Response.json(
+        { error: `Guided evolution requires Premium or Elite. Your current tier is ${entitlements.tier}.` },
+        { status: 403 }
+      );
     }
-    const companion = companions[0];
+
+    const companion = await getOwnedRecordById(base44, 'Companion', String(companion_id), ownerKeys);
+    if (!companion) {
+      return Response.json({ error: 'Companion not found or not owned by caller' }, { status: 404 });
+    }
 
     // Determine next stage
     const currentIndex = EVOLUTION_PATH.indexOf(companion.stage);
@@ -64,7 +76,7 @@ Deno.serve(async (req) => {
     // Check XP requirement
     if ((companion.experience_points || 0) < requiredXP) {
       // Log failed attempt
-      await base44.entities.EvolutionAttempt.create({
+      await base44.asServiceRole.entities.EvolutionAttempt.create({
         companion_id,
         puzzle_id: puzzle_id || null,
         from_stage: companion.stage,
@@ -85,7 +97,7 @@ Deno.serve(async (req) => {
 
     // Check puzzle completion if provided
     if (puzzle_id) {
-      const puzzles = await base44.entities.EvolutionPuzzle.filter({ id: puzzle_id });
+      const puzzles = await base44.asServiceRole.entities.EvolutionPuzzle.filter({ id: puzzle_id });
       if (puzzles && puzzles.length > 0 && !puzzles[0].completed) {
         return Response.json({
           success: false,
@@ -130,24 +142,32 @@ Deno.serve(async (req) => {
       }
     }
 
+    Object.assign(
+      statChanges,
+      recomputeCompanionIdentity(
+        { ...companion, ...statChanges },
+        { recomputedAt: new Date().toISOString() }
+      )
+    );
+
     const pcpReward = PCP_REWARDS[nextStage] || 0;
 
     // Update companion
-    await base44.entities.Companion.update(companion_id, statChanges);
+    await base44.asServiceRole.entities.Companion.update(companion_id, statChanges);
 
     // Award PcP
     if (pcpReward > 0) {
-      const currencies = await base44.entities.UserCurrency.filter({});
-      if (currencies && currencies.length > 0) {
-        await base44.entities.UserCurrency.update(currencies[0].id, {
-          pcp_balance: (currencies[0].pcp_balance || 0) + pcpReward,
-          pcp_earned: (currencies[0].pcp_earned || 0) + pcpReward
+      const currency = await getUserCurrencyRecord(base44, ownerKeys);
+      if (currency) {
+        await base44.asServiceRole.entities.UserCurrency.update(currency.id, {
+          pcp_balance: (currency.pcp_balance || 0) + pcpReward,
+          pcp_earned: (currency.pcp_earned || 0) + pcpReward
         });
       }
     }
 
     // Log successful attempt
-    await base44.entities.EvolutionAttempt.create({
+    await base44.asServiceRole.entities.EvolutionAttempt.create({
       companion_id,
       puzzle_id: puzzle_id || null,
       from_stage: companion.stage,
@@ -159,7 +179,7 @@ Deno.serve(async (req) => {
     });
 
     // Log interaction
-    await base44.entities.InteractionLog.create({
+    await base44.asServiceRole.entities.InteractionLog.create({
       companion_id,
       action_type: 'puzzle',
       details: { from_stage: companion.stage, to_stage: nextStage },

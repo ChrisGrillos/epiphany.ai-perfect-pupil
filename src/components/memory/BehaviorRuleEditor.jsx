@@ -6,8 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { 
-  Plus, Trash2, Zap, Shield, ChevronDown, ChevronUp,
-  AlertTriangle, BookOpen
+  Plus, Trash2, Zap, Shield, ChevronDown, ChevronUp, BookOpen
 } from 'lucide-react';
 
 export default function BehaviorRuleEditor({ rules, onCreate, onUpdate, onDelete }) {

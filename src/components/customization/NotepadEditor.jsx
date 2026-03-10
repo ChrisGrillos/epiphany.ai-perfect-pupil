@@ -8,8 +8,7 @@ import {
   FileText, 
   Upload, 
   Sparkles, 
-  Check, 
-  AlertCircle,
+  Check,
   Brain,
   Heart,
   Lock,
@@ -49,7 +48,6 @@ export default function NotepadEditor({
   const [notepadContent, setNotepadContent] = useState('');
   const [isParsing, setIsParsing] = useState(false);
   const [parseResult, setParseResult] = useState(null);
-  const [fileInput, setFileInput] = useState(null);
   
   const tier = subscription?.tier || 'free';
   const limits = TIER_LIMITS[tier];

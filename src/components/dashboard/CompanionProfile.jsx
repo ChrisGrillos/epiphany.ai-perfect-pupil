@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import CompanionAvatar from '@/components/companion/CompanionAvatar';
 import { Swords, Shield, Heart, Zap, Sparkles, Star } from 'lucide-react';
 

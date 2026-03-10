@@ -14,14 +14,15 @@ import {
   User, 
   CreditCard, 
   Bell, 
-  Shield, 
-  Palette,
+  Shield,
   LogOut,
   Crown,
   Check,
   Cpu
 } from 'lucide-react';
 import TierCard from '@/components/subscription/TierCard';
+
+const TIER_PRICES = { free: 0, basic: 0.99, premium: 4.99, elite: 9.99 };
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -45,15 +46,24 @@ export default function Settings() {
   }, []);
   
   const loadData = async () => {
-    const [currentUser, companions, subs] = await Promise.all([
+    const [currentUser, companions, subs, entitlementResponse] = await Promise.all([
       base44.auth.me(),
       base44.entities.Companion.list(),
-      base44.entities.Subscription.list()
+      base44.entities.Subscription.list(),
+      base44.functions.invoke('getEntitlements', {})
     ]);
     
     setUser(currentUser);
     setCompanion(companions[0]);
-    setSubscription(subs[0] || { tier: 'free' });
+    const entitlementTier = entitlementResponse?.data?.tier;
+    if (entitlementTier) {
+      setSubscription({
+        tier: entitlementTier,
+        monthly_price: TIER_PRICES[entitlementTier] ?? 0
+      });
+    } else {
+      setSubscription(subs[0] || { tier: 'free' });
+    }
     setLoading(false);
   };
   
@@ -65,47 +75,19 @@ export default function Settings() {
     // Simulate payment processing
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    const tierPrices = { free: 0, basic: 0.99, premium: 4.99, elite: 9.99 };
-    const tierPupilLimits = { free: 2, basic: 5, premium: 10, elite: 20 };
-    
-    const tierFeatures = {
-      free: ['basic_view', 'limited_chat'],
-      basic: ['full_care', 'unlimited_chat', 'store_access', 'brain_export', 'achievements'],
-      premium: ['full_care', 'unlimited_chat', 'store_access', 'brain_export', 'achievements', 'evolution_control', 'customization'],
-      elite: ['full_care', 'unlimited_chat', 'store_access', 'brain_export', 'achievements', 'evolution_control', 'customization', 'puzzles', 'advanced_personalization']
-    };
-    
-    if (subscription?.id) {
-      await base44.entities.Subscription.update(subscription.id, {
-        tier,
-        monthly_price: tierPrices[tier],
-        features: tierFeatures[tier]
-      });
-    } else {
-      await base44.entities.Subscription.create({
-        tier,
-        monthly_price: tierPrices[tier],
-        is_active: true,
-        features: tierFeatures[tier]
-      });
-    }
-
-    // Update max_pupils_allowed in UserCurrency
-    const currencies = await base44.entities.UserCurrency.list();
-    if (currencies && currencies.length > 0) {
-      await base44.entities.UserCurrency.update(currencies[0].id, {
-        max_pupils_allowed: tierPupilLimits[tier]
-      });
+    const response = await base44.functions.invoke('setSubscriptionTier', { tier });
+    if (response.data?.error) {
+      toast.error(response.data.error);
+      setProcessing(false);
+      return;
     }
     
-    setSubscription(prev => ({
-      ...prev,
-      tier,
-      monthly_price: tierPrices[tier],
-      features: tierFeatures[tier]
-    }));
+    setSubscription({
+      tier: response.data?.tier || tier,
+      monthly_price: TIER_PRICES[response.data?.tier || tier] ?? 0
+    });
     
-    toast.success(`Successfully upgraded to ${tier}!`);
+    toast.success(`Successfully switched to ${response.data?.tier || tier}!`);
     setProcessing(false);
   };
   

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,10 +15,17 @@ export default function BrainExportPanel({ companion, subscription }) {
 
   const handleExport = async () => {
     if (!companion?.id) return;
+    const passphrase = window.prompt('Enter an export passphrase (minimum 8 characters):');
+    if (!passphrase) return;
+    if (passphrase.length < 8) {
+      toast.error('Passphrase must be at least 8 characters.');
+      return;
+    }
     setExporting(true);
 
     const response = await base44.functions.invoke('exportBrain', {
-      companion_id: companion.id
+      companion_id: companion.id,
+      passphrase
     });
 
     if (response.data.error) {
@@ -30,7 +36,7 @@ export default function BrainExportPanel({ companion, subscription }) {
 
     // Download as .pupilbrain (JSON) file
     const blob = new Blob(
-      [JSON.stringify(response.data.brain_data, null, 2)],
+      [JSON.stringify(response.data.brain_package, null, 2)],
       { type: 'application/json' }
     );
     const url = URL.createObjectURL(blob);
@@ -42,7 +48,7 @@ export default function BrainExportPanel({ companion, subscription }) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    toast.success(`${companion.name}'s brain data exported successfully!`);
+    toast.success(`${companion.name}'s encrypted brain backup was exported successfully.`);
     setExporting(false);
   };
 
@@ -61,15 +67,23 @@ export default function BrainExportPanel({ companion, subscription }) {
       return;
     }
 
+    const passphrase = window.prompt('Enter the passphrase used for this backup:');
+    if (!passphrase) {
+      setImporting(false);
+      e.target.value = '';
+      return;
+    }
+
     const response = await base44.functions.invoke('importBrain', {
       companion_id: companion.id,
-      brain_data: brainData
+      brain_package: brainData,
+      passphrase
     });
 
     if (response.data.error) {
       toast.error(response.data.error);
     } else {
-      toast.success(`Brain data imported to ${companion.name}!`);
+      toast.success(`Encrypted brain backup imported to ${companion.name}!`);
     }
 
     setImporting(false);
@@ -90,8 +104,8 @@ export default function BrainExportPanel({ companion, subscription }) {
         </div>
 
         <p className="text-sm text-slate-500 mb-4">
-          Save your companion's memories, personality, behavior rules, and evolution history locally.
-          Import into a new companion or restore from backup.
+          Save your companion's memories, personality, behavior rules, and evolution history in an encrypted local backup.
+          Import with the same passphrase to restore.
         </p>
 
         {!isPaid ? (
@@ -146,7 +160,7 @@ export default function BrainExportPanel({ companion, subscription }) {
             <p className="text-xs text-violet-600">
               <FileJson className="w-3 h-3 inline mr-1" />
               Files use the <strong>.pupilbrain</strong> format. 
-              Export includes: memories, behavior rules, chat history, evolution data, trait affinity, and algorithm state.
+              Export includes encrypted memories, behavior rules, chat history, evolution data, trait affinity, and algorithm state.
             </p>
           </div>
         )}

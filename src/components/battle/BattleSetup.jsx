@@ -75,12 +75,13 @@ export default function BattleSetup({ roster, companion, onStartBattle, loading 
         <div className="flex gap-3">
           {[
             { id: 'training_ai', label: 'Training (vs AI)' },
-            { id: 'pupil_vs_pupil', label: 'Pupil vs Pupil' }
+            { id: 'pupil_vs_pupil', label: 'Pupil vs Pupil (Soon)', disabled: true }
           ].map(bt => (
             <Button
               key={bt.id}
               variant={battleType === bt.id ? 'default' : 'outline'}
-              onClick={() => setBattleType(bt.id)}
+              onClick={() => !bt.disabled && setBattleType(bt.id)}
+              disabled={bt.disabled}
               className={battleType === bt.id ? 'bg-violet-600 hover:bg-violet-700' : 'border-slate-600 text-slate-300 hover:bg-slate-700'}
             >
               {bt.label}
