@@ -234,7 +234,7 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm"
+              className="bg-card rounded-3xl p-6 border border-border shadow-sm"
             >
               {/* Companion Name & Level */}
               <div className="text-center mb-4">

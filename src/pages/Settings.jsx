@@ -18,8 +18,22 @@ import {
   LogOut,
   Crown,
   Check,
-  Cpu
+  Cpu,
+  Trash2,
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import TierCard from '@/components/subscription/TierCard';
 
 const TIER_PRICES = { free: 0, basic: 0.99, premium: 4.99, elite: 9.99 };
@@ -31,6 +45,7 @@ export default function Settings() {
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [activeSection, setActiveSection] = useState('account');
   
   // Settings state
@@ -94,10 +109,22 @@ export default function Settings() {
   const handleLogout = async () => {
     await base44.auth.logout();
   };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    const response = await base44.functions.invoke('deleteAccount', {});
+    if (response.data?.error) {
+      toast.error(response.data.error);
+      setDeleting(false);
+      return;
+    }
+    toast.success('Account data deleted. Signing out...');
+    setTimeout(() => base44.auth.logout(), 1500);
+  };
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-cyan-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
@@ -110,16 +137,16 @@ export default function Settings() {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-cyan-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
+      <header className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-40">
         <div className="container mx-auto px-4 py-3 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate(createPageUrl('Home'))}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="font-bold text-slate-800">Settings</h1>
-            <p className="text-xs text-slate-500">Manage your account & preferences</p>
+            <h1 className="font-bold text-foreground">Settings</h1>
+            <p className="text-xs text-muted-foreground">Manage your account & preferences</p>
           </div>
         </div>
       </header>
@@ -128,7 +155,7 @@ export default function Settings() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Sidebar Navigation */}
           <div className="md:col-span-1">
-            <nav className="bg-white rounded-2xl border border-slate-200 p-2 sticky top-24">
+            <nav className="bg-card rounded-2xl border border-border p-2 sticky top-24">
               {[
                 { id: 'account', icon: User, label: 'Account' },
                 { id: 'subscription', icon: CreditCard, label: 'Subscription' },
@@ -143,7 +170,7 @@ export default function Settings() {
                     w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors
                     ${activeSection === item.id 
                       ? 'bg-violet-100 text-violet-700' 
-                      : 'text-slate-600 hover:bg-slate-50'
+                      : 'text-muted-foreground hover:bg-muted'
                     }
                   `}
                 >
@@ -161,9 +188,9 @@ export default function Settings() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm"
+                className="bg-card rounded-3xl p-6 border border-border shadow-sm"
               >
-                <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                   <User className="w-5 h-5 text-violet-500" />
                   Account Information
                 </h2>
@@ -187,14 +214,68 @@ export default function Settings() {
                 
                 <Separator className="my-6" />
                 
-                <Button 
-                  variant="destructive" 
-                  onClick={handleLogout}
-                  className="w-full md:w-auto"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleLogout}
+                    className="w-full sm:w-auto"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="outline"
+                        className="w-full sm:w-auto border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Account
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                          <AlertTriangle className="w-5 h-5 text-red-500" />
+                          Delete Your Account?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="space-y-3">
+                          <p>
+                            This will <strong>permanently erase all of your data</strong>, including:
+                          </p>
+                          <ul className="list-disc pl-5 space-y-1 text-sm">
+                            <li>All companions, stats, and evolution progress</li>
+                            <li>Chat history and memories</li>
+                            <li>Battle records and roster units</li>
+                            <li>Subscription, inventory, and currency balance</li>
+                            <li>Achievements and behavior rules</li>
+                          </ul>
+                          <p className="font-medium text-red-600">
+                            This action cannot be undone.
+                          </p>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteAccount}
+                          disabled={deleting}
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                          {deleting ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Deleting...
+                            </>
+                          ) : (
+                            'Yes, Delete Everything'
+                          )}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </motion.div>
             )}
             
@@ -206,8 +287,8 @@ export default function Settings() {
                 className="space-y-6"
               >
                 {/* Current Plan */}
-                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-                  <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <div className="bg-card rounded-3xl p-6 border border-border shadow-sm">
+                  <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                     <Crown className="w-5 h-5 text-amber-500" />
                     Current Plan
                   </h2>
@@ -229,8 +310,8 @@ export default function Settings() {
                 </div>
                 
                 {/* All Plans */}
-                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-                  <h2 className="text-xl font-bold text-slate-800 mb-6">
+                <div className="bg-card rounded-3xl p-6 border border-border shadow-sm">
+                  <h2 className="text-xl font-bold text-foreground mb-6">
                     Available Plans
                   </h2>
                   
@@ -254,9 +335,9 @@ export default function Settings() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm"
+                className="bg-card rounded-3xl p-6 border border-border shadow-sm"
               >
-                <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                   <Bell className="w-5 h-5 text-violet-500" />
                   Preferences
                 </h2>
@@ -264,8 +345,8 @@ export default function Settings() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-slate-800">Push Notifications</h3>
-                      <p className="text-sm text-slate-500">Get reminders to care for your companion</p>
+                      <h3 className="font-medium text-foreground">Push Notifications</h3>
+                      <p className="text-sm text-muted-foreground">Get reminders to care for your companion</p>
                     </div>
                     <Switch
                       checked={settings.notifications}
@@ -277,8 +358,8 @@ export default function Settings() {
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-slate-800">Sound Effects</h3>
-                      <p className="text-sm text-slate-500">Play sounds during interactions</p>
+                      <h3 className="font-medium text-foreground">Sound Effects</h3>
+                      <p className="text-sm text-muted-foreground">Play sounds during interactions</p>
                     </div>
                     <Switch
                       checked={settings.soundEffects}
@@ -290,8 +371,8 @@ export default function Settings() {
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-slate-800">Dark Mode</h3>
-                      <p className="text-sm text-slate-500">Use dark theme</p>
+                      <h3 className="font-medium text-foreground">Dark Mode</h3>
+                      <p className="text-sm text-muted-foreground">Use dark theme</p>
                     </div>
                     <Switch
                       checked={settings.darkMode}
@@ -307,14 +388,14 @@ export default function Settings() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm"
+                className="bg-card rounded-3xl p-6 border border-border shadow-sm"
               >
-                <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <Cpu className="w-5 h-5 text-violet-500" />
                   AI Provider Settings
                 </h2>
                 
-                <p className="text-slate-600 mb-6">
+                <p className="text-muted-foreground mb-6">
                   Configure external AI services for enhanced companion intelligence. Premium and Elite tiers can connect 
                   custom AI providers like OpenAI, Anthropic, or your own LLM endpoints.
                 </p>
@@ -334,9 +415,9 @@ export default function Settings() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm"
+                className="bg-card rounded-3xl p-6 border border-border shadow-sm"
               >
-                <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                   <Shield className="w-5 h-5 text-violet-500" />
                   Privacy & Security
                 </h2>
@@ -357,8 +438,8 @@ export default function Settings() {
                   
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-slate-800">Privacy Mode</h3>
-                      <p className="text-sm text-slate-500">Hide sensitive data in screenshots</p>
+                      <h3 className="font-medium text-foreground">Privacy Mode</h3>
+                      <p className="text-sm text-muted-foreground">Hide sensitive data in screenshots</p>
                     </div>
                     <Switch
                       checked={settings.privacyMode}
@@ -369,7 +450,7 @@ export default function Settings() {
                   <Separator />
                   
                   <div>
-                    <h3 className="font-medium text-slate-800 mb-2">Data Management</h3>
+                    <h3 className="font-medium text-foreground mb-2">Data Management</h3>
                     <div className="flex flex-wrap gap-2">
                       <Button variant="outline" size="sm">
                         Export My Data
