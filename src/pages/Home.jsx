@@ -23,6 +23,8 @@ import StatsDisplay from '@/components/companion/StatsDisplay';
 import ActionButtons from '@/components/companion/ActionButtons';
 import ChatInterface from '@/components/companion/ChatInterface';
 import BrainExportPanel from '@/components/companion/BrainExportPanel';
+import BottomTabBar from '@/components/mobile/BottomTabBar';
+import PullToRefresh from '@/components/mobile/PullToRefresh';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -142,9 +144,9 @@ export default function Home() {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-cyan-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-cyan-50 pb-16 md:pb-0">
+      {/* Header - hidden on mobile, shown on desktop */}
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 hidden md:block">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">✨</span>
@@ -155,63 +157,53 @@ export default function Home() {
           </div>
           
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(createPageUrl('Battle'))}
-              title="Battle Arena"
-            >
+            <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('Battle'))} title="Battle Arena">
               <Swords className="w-5 h-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(createPageUrl('MemoryManager'))}
-              title="Memory Manager"
-            >
+            <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('MemoryManager'))} title="Memory Manager">
               <Brain className="w-5 h-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(createPageUrl('Customize'))}
-              title="Customize"
-            >
+            <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('Customize'))} title="Customize">
               <Sparkles className="w-5 h-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(createPageUrl('Store'))}
-            >
+            <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('Store'))}>
               <ShoppingBag className="w-5 h-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(createPageUrl('CompanionDashboard'))}
-              title="Dashboard"
-            >
+            <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('CompanionDashboard'))} title="Dashboard">
               <BarChart3 className="w-5 h-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(createPageUrl('Achievements'))}
-            >
+            <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('Achievements'))}>
               <Trophy className="w-5 h-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(createPageUrl('Settings'))}
-            >
+            <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('Settings'))}>
               <Settings className="w-5 h-5" />
             </Button>
           </div>
         </div>
       </header>
+
+      {/* Mobile header - compact */}
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 md:hidden">
+        <div className="px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">✨</span>
+            <h1 className="font-bold text-slate-800 text-sm">Epiphany.AI</h1>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="select-none h-9 w-9" onClick={() => navigate(createPageUrl('MemoryManager'))}>
+              <Brain className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="select-none h-9 w-9" onClick={() => navigate(createPageUrl('Store'))}>
+              <ShoppingBag className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="select-none h-9 w-9" onClick={() => navigate(createPageUrl('Achievements'))}>
+              <Trophy className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </header>
       
+      <PullToRefresh onRefresh={loadData}>
       <main className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Companion Display */}
@@ -362,6 +354,10 @@ export default function Home() {
           </div>
         </div>
       </main>
+      </PullToRefresh>
+
+      {/* Bottom tab bar for mobile */}
+      <BottomTabBar />
     </div>
   );
 }
