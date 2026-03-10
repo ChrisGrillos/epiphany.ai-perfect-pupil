@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -39,9 +39,10 @@ export default function Home() {
   }, []);
   
   const loadData = async () => {
-    const [companions, subscriptions] = await Promise.all([
+    const [companions, subscriptions, entitlementResponse] = await Promise.all([
       base44.entities.Companion.list(),
-      base44.entities.Subscription.list()
+      base44.entities.Subscription.list(),
+      base44.functions.invoke('getEntitlements', {})
     ]);
     
     if (companions.length === 0) {
@@ -50,7 +51,8 @@ export default function Home() {
     }
     
     setCompanion(companions[0]);
-    setSubscription(subscriptions[0] || { tier: 'free' });
+    const entitlementTier = entitlementResponse?.data?.tier;
+    setSubscription(entitlementTier ? { tier: entitlementTier } : (subscriptions[0] || { tier: 'free' }));
     setLoading(false);
   };
   

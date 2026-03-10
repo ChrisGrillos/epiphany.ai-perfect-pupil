@@ -6,6 +6,7 @@ import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowRight, ArrowLeft, Sparkles, Heart, Shield, Brain } from 'lucide-react';
+import { toast } from 'sonner';
 import StageSelector from '@/components/onboarding/StageSelector';
 import SpeciesSelector from '@/components/onboarding/SpeciesSelector';
 import TierCard from '@/components/subscription/TierCard';
@@ -22,7 +23,6 @@ export default function Welcome() {
     tier: 'free'
   });
   const [isCreating, setIsCreating] = useState(false);
-  const [existingCompanion, setExistingCompanion] = useState(null);
   
   useEffect(() => {
     checkExistingCompanion();
@@ -47,87 +47,33 @@ export default function Welcome() {
     }
   };
   
-  const TIER_PUPIL_LIMITS = { free: 2, basic: 5, premium: 10, elite: 20 };
-
   const handleCreate = async () => {
     setIsCreating(true);
     setStep(STEPS.indexOf('creating'));
-    
-    // Create subscription
-    await base44.entities.Subscription.create({
-      tier: formData.tier,
-      monthly_price: formData.tier === 'free' ? 0 : formData.tier === 'basic' ? 0.99 : formData.tier === 'premium' ? 4.99 : 9.99,
-      is_active: true,
-      features: getFeatures(formData.tier)
-    });
+    try {
+      const tierResponse = await base44.functions.invoke('setSubscriptionTier', {
+        tier: formData.tier
+      });
+      if (tierResponse.data?.error) {
+        throw new Error(tierResponse.data.error);
+      }
 
-    // Create UserCurrency with tier-appropriate pupil limit
-    await base44.entities.UserCurrency.create({
-      pcp_balance: 0,
-      free_pupils_count: 1,
-      max_pupils_allowed: TIER_PUPIL_LIMITS[formData.tier] || 2
-    });
-    
-    // Initialize stats based on stage
-    const stageStats = {
-      infant: { knowledge_level: 5, personality_openness: 30 },
-      child: { knowledge_level: 30, personality_openness: 50 },
-      teenager: { knowledge_level: 60, personality_openness: 70 }
-    };
-    
-    // Create companion with Phase 1 fields
-    await base44.entities.Companion.create({
-      name: formData.name,
-      starting_stage: formData.stage,
-      stage: formData.stage,
-      species: formData.species,
-      hunger: 70,
-      happiness: 60,
-      fitness: 50,
-      knowledge_level: stageStats[formData.stage].knowledge_level,
-      personality_openness: stageStats[formData.stage].personality_openness,
-      personality_agreeableness: 50,
-      personality_curiosity: 60,
-      personality_energy: 50,
-      personality_empathy: 40,
-      body_form: 'round',
-      body_size: 'small',
-      primary_color: '#9b87f5',
-      secondary_color: '#7dd3c0',
-      accent_color: '#fbbf24',
-      mood: 'curious',
-      trust_level: 10,
-      affection_level: 10,
-      experience_points: 0,
-      special_abilities: [],
-      learned_topics: [],
-      build_archetype: 'Adaptive',
-      body_frame: 'Balanced',
-      temperament: 'Calm',
-      trait_affinity: { aggressive: 0, nurturing: 0, curious: 0, chaotic: 0, disciplined: 0 },
-      bond_level: 0,
-      combat_damage_dealt: 0,
-      combat_damage_blocked: 0,
-      combat_healing_done: 0,
-      combat_ally_saves: 0,
-      combat_status_inflicted: 0
-    });
-    
-    setTimeout(() => {
-      navigate(createPageUrl('Home'));
-    }, 2000);
-  };
-  
-  const getFeatures = (tier) => {
-    switch (tier) {
-      case 'basic':
-        return ['full_care', 'unlimited_chat', 'store_access', 'achievements'];
-      case 'premium':
-        return ['full_care', 'unlimited_chat', 'store_access', 'achievements', 'evolution_control', 'customization'];
-      case 'elite':
-        return ['full_care', 'unlimited_chat', 'store_access', 'achievements', 'evolution_control', 'customization', 'puzzles', 'advanced_personalization'];
-      default:
-        return ['basic_view', 'limited_chat'];
+      const createResponse = await base44.functions.invoke('createCompanion', {
+        name: formData.name,
+        stage: formData.stage,
+        species: formData.species
+      });
+      if (createResponse.data?.error) {
+        throw new Error(createResponse.data.error);
+      }
+
+      setTimeout(() => {
+        navigate(createPageUrl('Home'));
+      }, 1200);
+    } catch (error) {
+      toast.error(error?.message || 'Unable to create companion right now.');
+      setStep(STEPS.indexOf('tier'));
+      setIsCreating(false);
     }
   };
   

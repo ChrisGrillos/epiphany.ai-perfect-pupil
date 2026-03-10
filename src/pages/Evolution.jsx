@@ -26,10 +26,11 @@ export default function Evolution() {
   }, []);
   
   const loadData = async () => {
-    const [companions, subs, puzzles] = await Promise.all([
+    const [companions, subs, puzzles, entitlementResponse] = await Promise.all([
       base44.entities.Companion.list(),
       base44.entities.Subscription.list(),
-      base44.entities.EvolutionPuzzle.list()
+      base44.entities.EvolutionPuzzle.list(),
+      base44.functions.invoke('getEntitlements', {})
     ]);
     
     if (companions.length === 0) {
@@ -37,49 +38,48 @@ export default function Evolution() {
       return;
     }
     
+    const entitlementTier = entitlementResponse?.data?.tier;
     setCompanion(companions[0]);
-    setSubscription(subs[0] || { tier: 'free' });
+    setSubscription(entitlementTier ? { tier: entitlementTier } : (subs[0] || { tier: 'free' }));
     setCompletedPuzzles(puzzles.filter(p => p.completed));
     setLoading(false);
   };
   
   const handlePuzzleComplete = async (result) => {
     if (!companion) return;
-    
-    const bonuses = {
-      personality_openness: Math.floor(Math.random() * 3) + 1,
-      personality_curiosity: Math.floor(Math.random() * 3) + 1,
-      experience_points: (companion.experience_points || 0) + (50 * (difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : 3))
-    };
-    
-    await base44.entities.Companion.update(companion.id, {
-      ...bonuses,
+
+    const response = await base44.functions.invoke('submitEvolutionPuzzle', {
+      companion_id: companion.id,
+      difficulty,
       evolution_dna: result
     });
-    
-    await base44.entities.EvolutionPuzzle.create({
-      companion_id: companion.id,
-      puzzle_type: 'full_helix',
-      completed: true,
-      completion_reward: bonuses,
-      difficulty
-    });
-    
-    setCompanion(prev => ({ ...prev, ...bonuses }));
-    toast.success(`Evolution complete! +${bonuses.experience_points} XP earned!`);
+    if (response.data?.error) {
+      toast.error(response.data.error);
+      return;
+    }
+
+    const bonuses = response.data?.bonuses || {};
+    setCompanion(response.data?.companion || companion);
+    toast.success(`Evolution complete! +${bonuses.xp_gain || 0} XP earned!`);
+
+    const puzzles = await base44.entities.EvolutionPuzzle.filter({ companion_id: companion.id });
+    setCompletedPuzzles((puzzles || []).filter(p => p.completed));
   };
 
   const handleEvolutionPathSelect = async (pathData) => {
     if (!companion) return;
-    
-    await base44.entities.Companion.update(companion.id, {
-      evolution_path: pathData.evolution_path,
-      subtype: pathData.subtype,
-      signature_passive: pathData.signature_passive,
-      signature_ability: pathData.signature_ability
-    });
 
-    setCompanion(prev => ({ ...prev, ...pathData }));
+    const response = await base44.functions.invoke('setEvolutionPath', {
+      companion_id: companion.id,
+      evolution_path: pathData.evolution_path,
+      subtype: pathData.subtype
+    });
+    if (response.data?.error) {
+      toast.error(response.data.error);
+      return;
+    }
+
+    setCompanion(response.data?.companion || companion);
     setShowPathSelector(false);
     toast.success(`${companion.name} chose the ${pathData.evolution_path} path — ${pathData.subtype} specialization!`);
   };

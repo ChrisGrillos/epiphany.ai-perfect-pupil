@@ -1,4 +1,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import {
+  buildUserOwnerKeys,
+  isTierAtLeast,
+  resolveUserEntitlements,
+  recomputeCompanionIdentity,
+  getOwnedRecordById
+} from './_serverUtils.ts';
 
 /**
  * Server-authoritative care action handler.
@@ -67,6 +74,14 @@ const ACTION_CONFIG = {
   }
 };
 
+const ACTION_REQUIRED_TIERS = {
+  feed: 'basic',
+  exercise: 'basic',
+  study: 'basic',
+  interact: 'basic',
+  play: 'basic'
+};
+
 function clampStat(value, min = 0, max = 100) {
   return Math.max(min, Math.min(max, value));
 }
@@ -84,42 +99,6 @@ function calculateMood(companion) {
 function calculateLevel(xp) {
   // Simple level curve: level = floor(sqrt(xp / 10)) + 1
   return Math.floor(Math.sqrt(xp / 10)) + 1;
-}
-
-function deriveTemperament(affinity) {
-  const { aggressive = 0, nurturing = 0, curious = 0, chaotic = 0, disciplined = 0 } = affinity;
-  const scores = {
-    Fierce: aggressive * 2 + chaotic,
-    Protective: nurturing * 2 + disciplined,
-    Calculating: disciplined * 2 + curious,
-    Playful: chaotic * 2 + curious,
-    Calm: disciplined * 2 + nurturing,
-    Unstable: chaotic * 3
-  };
-  let best = 'Calm', bestScore = 0;
-  for (const [temp, score] of Object.entries(scores)) {
-    if (score > bestScore) { best = temp; bestScore = score; }
-  }
-  return best;
-}
-
-function deriveArchetype(affinity) {
-  const { aggressive = 0, nurturing = 0, curious = 0, chaotic = 0, disciplined = 0 } = affinity;
-  const scores = {
-    Berserker: aggressive * 3,
-    Guardian: nurturing * 2 + disciplined,
-    Oracle: curious * 2 + disciplined,
-    Trickster: chaotic * 2 + curious,
-    Caretaker: nurturing * 3,
-    Duelist: aggressive * 2 + disciplined,
-    Vanguard: disciplined * 2 + aggressive,
-    Adaptive: 5  // baseline so new companions stay Adaptive until traits develop
-  };
-  let best = 'Adaptive', bestScore = 0;
-  for (const [arch, score] of Object.entries(scores)) {
-    if (score > bestScore) { best = arch; bestScore = score; }
-  }
-  return best;
 }
 
 Deno.serve(async (req) => {
@@ -141,12 +120,20 @@ Deno.serve(async (req) => {
       return Response.json({ error: `Invalid action_type: ${action_type}` }, { status: 400 });
     }
 
-    // Fetch companion (user-scoped for security)
-    const companions = await base44.entities.Companion.filter({ id: companion_id });
-    if (!companions || companions.length === 0) {
-      return Response.json({ error: 'Companion not found' }, { status: 404 });
+    const ownerKeys = buildUserOwnerKeys(user);
+    const entitlements = await resolveUserEntitlements(base44, ownerKeys);
+    const requiredTier = ACTION_REQUIRED_TIERS[action_type] || 'free';
+    if (!isTierAtLeast(entitlements.tier, requiredTier)) {
+      return Response.json(
+        { error: `This action requires the ${requiredTier} tier. Your current tier is ${entitlements.tier}.` },
+        { status: 403 }
+      );
     }
-    const companion = companions[0];
+
+    const companion = await getOwnedRecordById(base44, 'Companion', String(companion_id), ownerKeys);
+    if (!companion) {
+      return Response.json({ error: 'Companion not found or not owned by caller' }, { status: 404 });
+    }
 
     // Check cooldown
     if (config.cooldown_field && companion[config.cooldown_field]) {
@@ -216,21 +203,21 @@ Deno.serve(async (req) => {
     // Update bond_level (care actions increase bond)
     appliedChanges.bond_level = Math.min(100, (companion.bond_level || 0) + 1);
 
-    // Recalculate temperament based on trait_affinity
-    appliedChanges.temperament = deriveTemperament(newAffinity);
-
-    // Recalculate build_archetype based on trait_affinity
-    appliedChanges.build_archetype = deriveArchetype(newAffinity);
+    const identity = recomputeCompanionIdentity(
+      { ...companion, ...appliedChanges },
+      { recomputedAt: now }
+    );
+    Object.assign(appliedChanges, identity);
 
     // Pick response
     const responses = config.responses;
     const responseText = responses[Math.floor(Math.random() * responses.length)].replace('{name}', companion.name);
 
     // Commit updates
-    await base44.entities.Companion.update(companion_id, appliedChanges);
+    await base44.asServiceRole.entities.Companion.update(companion_id, appliedChanges);
 
     // Log the interaction
-    await base44.entities.InteractionLog.create({
+    await base44.asServiceRole.entities.InteractionLog.create({
       companion_id,
       action_type,
       stat_changes: appliedChanges,

@@ -5,8 +5,7 @@ import {
   Cookie, 
   Dumbbell, 
   MessageCircle, 
-  BookOpen, 
-  Gamepad2,
+  BookOpen,
   Gift,
   Sparkles,
   Lock

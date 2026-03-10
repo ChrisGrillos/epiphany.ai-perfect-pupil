@@ -11,13 +11,11 @@ import {
   Cpu, 
   Key, 
   Check, 
-  AlertCircle, 
   Shield,
   Zap,
   Cloud,
   Server,
-  Lock,
-  TrendingUp
+  Lock
 } from 'lucide-react';
 import { toast } from 'sonner';
 

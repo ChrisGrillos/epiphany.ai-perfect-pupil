@@ -1,0 +1,48 @@
+{
+  "id": "/",
+  "name": "Perfect Pupil",
+  "short_name": "PerfectPupil",
+  "description": "Emotionally safe AI companion focused on privacy-first growth and learning.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F8FAFC",
+  "theme_color": "#6D28D9",
+  "categories": [
+    "education",
+    "lifestyle",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Home",
+      "short_name": "Home",
+      "url": "/Home"
+    },
+    {
+      "name": "Battle",
+      "short_name": "Battle",
+      "url": "/Battle"
+    },
+    {
+      "name": "Memory",
+      "short_name": "Memory",
+      "url": "/MemoryManager"
+    }
+  ]
+}

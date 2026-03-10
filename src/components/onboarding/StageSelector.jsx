@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Baby, GraduationCap, User, Sparkles } from 'lucide-react';
+import { Baby, GraduationCap, Sparkles } from 'lucide-react';
 
 const STAGES = [
   {

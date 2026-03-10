@@ -8,10 +8,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { 
   ArrowLeft, 
-  Swords, 
-  Shield, 
-  Zap,
-  Trophy,
+  Swords,
   Loader2
 } from 'lucide-react';
 
@@ -49,17 +46,27 @@ export default function Battle() {
   };
 
   const handleStartBattle = async ({ battleType, mode, selectedIds, pcpBet }) => {
-    setLoading(true);
-    const response = await base44.functions.invoke('startBattle', {
-      battle_type: battleType,
-      mode,
-      team_a_ids: selectedIds,
-      pcp_bet: pcpBet || 0
-    });
+    try {
+      setLoading(true);
+      const response = await base44.functions.invoke('startBattle', {
+        battle_type: battleType,
+        mode,
+        team_a_ids: selectedIds,
+        pcp_bet: pcpBet || 0
+      });
 
-    setBattleData(response.data);
-    setPhase('battle');
-    setLoading(false);
+      if (response.data?.error) {
+        toast.error(response.data.error);
+        return;
+      }
+
+      setBattleData(response.data);
+      setPhase('battle');
+    } catch (error) {
+      toast.error(error?.message || 'Failed to start battle.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmitRound = async (actions) => {
@@ -68,7 +75,15 @@ export default function Battle() {
       actions
     });
 
+    if (response.data?.error) {
+      toast.error(response.data.error);
+      return response.data;
+    }
+
     const roundResult = response.data;
+    if ((roundResult.rejected_actions || []).length > 0) {
+      toast.error('Some submitted actions were rejected by the server and auto-resolved.');
+    }
 
     // Update local battle data with new state
     setBattleData(prev => ({
@@ -79,6 +94,8 @@ export default function Battle() {
         initiative_queue: roundResult.next_initiative || prev.battle.initiative_queue,
         status: roundResult.battle_status
       },
+      team_a: roundResult.team_a_state || prev.team_a,
+      team_b: roundResult.team_b_state || prev.team_b,
       turns: [...(prev.turns || []), ...roundResult.turns]
     }));
 
@@ -87,6 +104,10 @@ export default function Battle() {
       const finalResponse = await base44.functions.invoke('finalizeBattle', {
         battle_id: battleData.battle.id
       });
+      if (finalResponse.data?.error) {
+        toast.error(finalResponse.data.error);
+        return roundResult;
+      }
       setResultData({
         ...roundResult,
         ...finalResponse.data
@@ -165,8 +186,6 @@ export default function Battle() {
               teamB={battleData.team_b}
               isPlayerTeamA={true}
               onTakeTurn={handleSubmitRound}
-              onEndBattle={() => setPhase('result')}
-              companion={companion}
             />
           </motion.div>
         )}
