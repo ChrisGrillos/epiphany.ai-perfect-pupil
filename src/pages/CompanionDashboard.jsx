@@ -10,6 +10,8 @@ import { ArrowLeft, User, Activity, Trophy, BarChart3 } from 'lucide-react';
 import CompanionProfile from '@/components/dashboard/CompanionProfile';
 import ActivityTimeline from '@/components/dashboard/ActivityTimeline';
 import Leaderboard from '@/components/dashboard/Leaderboard';
+import BottomTabBar from '@/components/mobile/BottomTabBar';
+import PullToRefresh from '@/components/mobile/PullToRefresh';
 
 export default function CompanionDashboard() {
   const navigate = useNavigate();
@@ -56,10 +58,10 @@ export default function CompanionDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-cyan-50">
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-cyan-50 pb-16 md:pb-0">
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-3 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(createPageUrl('Home'))}>
+          <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('Home'))}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
@@ -72,6 +74,7 @@ export default function CompanionDashboard() {
         </div>
       </header>
 
+      <PullToRefresh onRefresh={loadData}>
       <main className="container mx-auto px-4 py-6 max-w-4xl">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full bg-white border border-slate-200 rounded-xl p-1 mb-6">
@@ -137,6 +140,9 @@ export default function CompanionDashboard() {
           </TabsContent>
         </Tabs>
       </main>
+      </PullToRefresh>
+
+      <BottomTabBar />
     </div>
   );
 }
