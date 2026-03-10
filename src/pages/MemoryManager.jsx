@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Brain, Shield, Sparkles, Plus } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import MemoryCard from '@/components/memory/MemoryCard';
 import MemoryFilters from '@/components/memory/MemoryFilters';
@@ -201,17 +202,21 @@ export default function MemoryManager() {
                     className="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-300"
                   />
                   <div className="flex gap-3">
-                    <select
-                      value={newMemory.type}
-                      onChange={(e) => setNewMemory({ ...newMemory, type: e.target.value })}
-                      className="text-sm px-3 py-2 border border-slate-200 rounded-lg"
-                    >
-                      <option value="fact">Fact</option>
-                      <option value="preference">Preference</option>
-                      <option value="event">Event</option>
-                      <option value="emotion">Emotion</option>
-                      <option value="skill">Skill</option>
-                    </select>
+                   <Select
+                     value={newMemory.type}
+                     onValueChange={(val) => setNewMemory({ ...newMemory, type: val })}
+                   >
+                     <SelectTrigger className="w-36 text-sm">
+                       <SelectValue placeholder="Type" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="fact">Fact</SelectItem>
+                       <SelectItem value="preference">Preference</SelectItem>
+                       <SelectItem value="event">Event</SelectItem>
+                       <SelectItem value="emotion">Emotion</SelectItem>
+                       <SelectItem value="skill">Skill</SelectItem>
+                     </SelectContent>
+                   </Select>
                     <div className="flex-1">
                       <label className="text-xs text-slate-500">Importance: {newMemory.importance}</label>
                       <input

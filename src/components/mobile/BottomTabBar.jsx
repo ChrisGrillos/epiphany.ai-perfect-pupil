@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Home, BarChart3, Swords, Settings } from 'lucide-react';
 
@@ -12,6 +12,18 @@ const tabs = [
 
 export default function BottomTabBar() {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleTabPress = (page) => {
+    const url = createPageUrl(page);
+    const isActive = location.pathname === url || location.pathname === url + '/';
+    if (isActive) {
+      // Already on this tab — scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      navigate(url);
+    }
+  };
 
   return (
     <nav
@@ -23,9 +35,9 @@ export default function BottomTabBar() {
           const url = createPageUrl(page);
           const isActive = location.pathname === url || location.pathname === url + '/';
           return (
-            <Link
+            <button
               key={page}
-              to={url}
+              onClick={() => handleTabPress(page)}
               className={`flex flex-col items-center justify-center flex-1 gap-0.5 transition-colors ${
                 isActive
                   ? 'text-violet-600'
@@ -34,7 +46,7 @@ export default function BottomTabBar() {
             >
               <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
               <span className="text-[10px] font-medium leading-none">{name}</span>
-            </Link>
+            </button>
           );
         })}
       </div>
