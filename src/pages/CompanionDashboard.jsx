@@ -78,15 +78,15 @@ export default function CompanionDashboard() {
       <main className="container mx-auto px-4 py-6 max-w-4xl">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full bg-white border border-slate-200 rounded-xl p-1 mb-6">
-            <TabsTrigger value="profile" className="flex-1 rounded-lg data-[state=active]:bg-violet-100">
+            <TabsTrigger value="profile" className="flex-1 rounded-lg data-[state=active]:bg-violet-100 select-none">
               <User className="w-4 h-4 mr-2" />
               Profile
             </TabsTrigger>
-            <TabsTrigger value="activity" className="flex-1 rounded-lg data-[state=active]:bg-violet-100">
+            <TabsTrigger value="activity" className="flex-1 rounded-lg data-[state=active]:bg-violet-100 select-none">
               <Activity className="w-4 h-4 mr-2" />
               Activity
             </TabsTrigger>
-            <TabsTrigger value="leaderboard" className="flex-1 rounded-lg data-[state=active]:bg-violet-100">
+            <TabsTrigger value="leaderboard" className="flex-1 rounded-lg data-[state=active]:bg-violet-100 select-none">
               <Trophy className="w-4 h-4 mr-2" />
               Leaderboard
             </TabsTrigger>

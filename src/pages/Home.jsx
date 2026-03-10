@@ -256,15 +256,15 @@ export default function Home() {
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="w-full bg-white border border-slate-200 rounded-xl p-1 mb-4">
-                <TabsTrigger value="care" className="flex-1 rounded-lg data-[state=active]:bg-violet-100">
+                <TabsTrigger value="care" className="flex-1 rounded-lg data-[state=active]:bg-violet-100 select-none">
                   <Sparkles className="w-4 h-4 mr-2" />
                   Care
                 </TabsTrigger>
-                <TabsTrigger value="chat" className="flex-1 rounded-lg data-[state=active]:bg-violet-100">
+                <TabsTrigger value="chat" className="flex-1 rounded-lg data-[state=active]:bg-violet-100 select-none">
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Chat
                 </TabsTrigger>
-                <TabsTrigger value="stats" className="flex-1 rounded-lg data-[state=active]:bg-violet-100">
+                <TabsTrigger value="stats" className="flex-1 rounded-lg data-[state=active]:bg-violet-100 select-none">
                   <TrendingUp className="w-4 h-4 mr-2" />
                   Stats
                 </TabsTrigger>
