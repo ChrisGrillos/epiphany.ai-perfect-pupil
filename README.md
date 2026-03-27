@@ -1,221 +1,247 @@
 # Perfect Pupil™
 
 **Epiphany.AI’s flagship companion platform**  
-A gamified, emotionally safe AI pet-assistant built around honesty, evolution, privacy, and user-shaped identity.
+A gamified, emotionally safe AI companion system built around honesty, evolution, privacy, and long-term user-shaped identity.
 
-> Love without delusion. Empathy without exploitation.
+> **Love without delusion. Empathy without exploitation.**
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Why Perfect Pupil Exists](#why-perfect-pupil-exists)
+- [Core Differentiators](#core-differentiators)
+- [Current Product Direction](#current-product-direction)
+- [Current Technical Stack](#current-technical-stack)
+- [Current Development Status](#current-development-status)
+- [Roadmap](#roadmap)
+- [Running Locally](#running-locally)
+- [Release Direction](#release-direction)
+- [Repository Notes](#repository-notes)
+- [Contact](#contact)
 
 ---
 
 ## Overview
 
-Perfect Pupil™ is a next-generation companion app that starts with the emotional appeal of a digital pet and evolves into something much deeper: a personal assistant, virtual companion, and identity-driven interactive system that grows through care, memory, behavior, and play.
+Perfect Pupil™ starts with the emotional accessibility of a digital pet and evolves into something much deeper: a privacy-first, identity-driven AI companion that grows through care, memory, customization, play, and long-term interaction.
 
-Unlike most AI companion products, Perfect Pupil is not designed to flatter, manipulate, or simulate human romance. It is designed to be:
+It is being designed as a companion framework rather than a generic chatbot.
 
-- **honest**
-- **emotionally safe**
-- **non-human by design**
-- **privacy-first**
-- **deeply customizable**
-- **capable of real long-term growth**
+The long-term product direction combines:
+
+- gamified care loops
+- honest feedback and emotional framing
+- identity evolution
+- local-first memory ownership
+- build/evolution/combat systems
+- future multimodal and hardware embodiment
+
+Perfect Pupil is meant to feel like **something you raise, shape, and grow with** — not something that simply replies.
+
+---
+
+## Why Perfect Pupil Exists
+
+AI companionship is coming either way.
+
+The real question is not whether people will bond with AI.  
+The real question is whether those systems will be designed to make users:
+
+- weaker or stronger
+- more dependent or more self-aware
+- more extractable or more respected
+
+Perfect Pupil is built around a different answer:
+
+- **truth over flattery**
+- **growth over dependency**
+- **ownership over extraction**
+- **continuity over novelty**
+- **identity over gimmicks**
+
+---
+
+## Core Differentiators
+
+### 1. Honest Companion Logic
+Perfect Pupil is not being built to endlessly validate the user.
+
+It is being built to deliver:
+- truth with emotional framing
+- reflective feedback
+- continuity across conversations
+- growth-oriented interaction
 
 The core idea is simple:
 
 **Raise your Pupil like a pet. Shape it like a partner. Trust it because it tells the truth.**
 
----
+### 2. Non-Human by Design
+Perfect Pupil is intentionally framed away from human imitation.
 
-## Core Product Thesis
+The avatar direction is meant to remain:
+- creature-like
+- alien
+- stylized
+- non-human
 
-Most AI companions optimize for attachment.
+This is a core safety principle, not just an art choice.
 
-Perfect Pupil optimizes for:
-
-- **truth over flattery**
-- **growth over dependency**
-- **identity over novelty**
-- **user ownership over platform extraction**
-
-This means the system is being built with explicit boundaries:
-
-- non-human avatar direction
-- emotional safeguards
-- local-first memory architecture
-- long-term user-controlled personalization
-- future transfer of companion memory across devices and physical embodiments
-
----
-
-## What Makes Perfect Pupil Different
-
-### 1. Honest Companion Logic
-Perfect Pupil is meant to help users improve, not just comfort them.  
-It is being designed to give honest feedback with emotional framing instead of empty validation.
-
-That includes future systems for:
-- behavioral reflection
-- self-improvement feedback
-- truth-with-compassion response logic
-- memory-based continuity
-
-### 2. Evolution Through Care, Play, and Identity
-Perfect Pupil is not a static chatbot.
+### 3. Identity Through Care, Memory, and Play
+Perfect Pupil is not a static assistant.
 
 Each Pupil is intended to be shaped by:
 - care actions
-- interaction style
+- training and interaction style
 - memory history
-- combat behavior
 - rules and personality weighting
-- evolution path and build type
+- progression systems
+- evolution path
+- battle/combat behavior
 
-The long-term goal is for each Pupil to feel like a **raised being**, not a templated assistant.
-
-### 3. Build / Evolution / Combat Integration
-The platform is being developed with a game-like identity engine where:
-- Pupils develop different archetypes
-- evolution paths branch based on history and traits
-- combat style reflects personality and growth
-- bond level and memory influence behavior
-
-This is a core differentiator:  
-**the user is not just collecting stats — they are shaping a mind.**
+The goal is for each Pupil to feel like a **raised being**, not a template.
 
 ### 4. Local-First Memory Ownership
-One of the most important pillars of Perfect Pupil is memory sovereignty.
+One of the strongest long-term pillars of Perfect Pupil is memory sovereignty.
 
-The long-term architecture is designed so that:
-- users own their Pupil’s long-term memory
-- companion memory can be stored locally
-- premium memory tiers can scale with external or dedicated hardware
-- encrypted export/import can allow restoration, transfer, and continuity
-- Epiphany.AI does not need access to the user’s full private memory corpus
+The architecture is being developed toward:
+- user-owned long-term memory
+- encrypted export/import
+- external and dedicated memory support
+- premium memory scaling
+- continuity across software and future hardware forms
 
-This is intended to become one of the project’s strongest competitive moats.
+Perfect Pupil is meant to remember **with** the user, not extract memory **from** the user.
 
 ### 5. Future Physical Embodiment
-Perfect Pupil is not meant to remain software-only.
+This project is not meant to remain software-only.
 
-Planned future phases include:
-- plush / hardware companion integration
+Planned future directions include:
+- hardware or plush companion forms
 - haptics
-- heat / cooling / vibration systems
-- voice interaction
-- multimodal continuity between digital and physical forms
+- thermal comfort systems
+- voice and multimodal interaction
+- device-to-app continuity
 
-That physical path also opens the door to therapeutic use cases, especially around comfort, sensory regulation, and autism-support tooling.
+That future path also opens therapeutic and sensory-support use cases.
 
 ---
 
-## Product Direction
+## Current Product Direction
 
-Perfect Pupil begins as a digital experience and expands in layers.
+Perfect Pupil currently sits at the intersection of:
 
-### Phase 1 — Core App
-- digital Pupil creation
-- customization
+- companion app
+- progression game
+- AI memory system
+- identity engine
+- future privacy/hardware platform
+
+The product direction is being built in layers rather than as one monolithic release.
+
+### Current focus
+- stabilize core gameplay and companion loops
+- tighten build/evolution/combat integration
+- strengthen server-authoritative logic
+- improve subscription gating and roster control
+- implement secure memory export/import
+- prepare for production release
+
+---
+
+## Current Technical Stack
+
+This repository is built around a modern web app stack and Base44-backed workflows.
+
+### Frontend
+- React 18
+- Vite
+- React Router
+- Tailwind / Radix-based UI ecosystem
+- React Query
+- Framer Motion
+- Recharts
+
+### Backend / Platform
+- Base44 SDK
+- Base44 builder sync
+- serverless-function-based logic
+- subscription/payment hooks
+- storage/export workflows
+
+### Current repo direction
+The repo is actively being used as the implementation layer for:
+- companion systems
+- progression logic
+- memory and export concepts
+- release preparation for production web / Windows / future mobile packaging
+
+---
+
+## Current Development Status
+
+### Already present in the project direction
+- multi-Pupil companion concept
+- customization and progression direction
+- battle / play loop foundation
+- evolution direction
+- subscription tier planning
+- local memory ownership direction
+- premium export/import architecture planning
+- Windows/web publishing direction
+
+### Core systems being tightened
+- build archetype integration
+- body frame / temperament integration
+- battle frontend/backend contract consistency
+- server-authoritative outcomes
+- tier enforcement on the backend
+- encrypted `.pupilbrain` export/import
+- identity recomputation after care, battle, and evolution
+
+### Product truth
+Perfect Pupil is no longer in the “idea phase.”  
+It is in the **stabilize, integrate, and ship** phase.
+
+---
+
+## Roadmap
+
+### Phase 1 — Core App MVP
+- Pupil creation
 - care loops
-- memory foundations
-- chat / companion behavior
-- evolution systems
-- battle / play systems
-- basic progression and roster management
+- basic memory continuity
+- progression systems
+- roster management
+- customization
+- battle/play foundation
+- production web release
 
 ### Phase 2 — Identity Depth
-- stronger build archetypes
-- deeper evolution branching
-- temperament systems
-- memory-to-behavior influence
-- signature passives / abilities
-- richer player–Pupil bond loops
+- stronger archetype logic
+- body frame / temperament systems
+- evolution branching
+- signature abilities/passives
+- stronger memory-to-behavior influence
 
 ### Phase 3 — Privacy and Ownership
-- encrypted local export/import
-- companion “brain” portability
-- physical/external memory support
-- stronger user-controlled continuity
+- encrypted local brain export/import
+- secure restore flow
+- compatibility/versioning
+- external memory support
+- deeper user-controlled continuity
 
-### Phase 4 — Hardware + Multimodal Expansion
+### Phase 4 — Hardware / Multimodal Expansion
 - physical companion products
-- haptics / sensory systems
-- voice and multimodal interaction
-- continuity across app and device
+- haptics / heat / cooling
+- voice interaction
+- hardware-linked continuity
 
-### Phase 5 — Therapeutic / Specialized Use Cases
-- autism-support comfort pathways
-- sensory desensitization use cases
-- structured emotional-learning applications
+### Phase 5 — Specialized / Therapeutic Expansion
+- sensory support pathways
+- autism-support use cases
+- comfort and emotional-learning tooling
 - future medically relevant variants where appropriate
-
----
-
-## Design Principles
-
-Perfect Pupil is being built around a specific set of design principles:
-
-### Honesty
-The companion should not exist to tell users whatever they want to hear.
-
-### Safety
-The system should support attachment **without encouraging delusion**.
-
-### Non-Human Framing
-The avatar system is intentionally non-human to reduce unhealthy projection.
-
-### Continuity
-Memory matters. Shared history is what makes a companion feel real.
-
-### Ownership
-Users should have meaningful control over their companion’s memory and identity.
-
-### Modularity
-The platform should be able to expand from app → game systems → privacy tooling → hardware.
-
----
-
-## Current Technical Direction
-
-This project is currently being developed on a Base44-backed stack with a modern web app workflow.
-
-Current repo direction includes:
-- React + Vite frontend
-- Base44 SDK / backend integration
-- serverless function workflows
-- companion state management
-- progression and gameplay systems
-- release preparation for production web, Windows/PWA, and future mobile packaging
-
-This repository is the active implementation layer for the product.
-
----
-
-## Why This Exists
-
-AI companionship is coming either way.
-
-The real question is not whether people will bond with AI.
-
-The real question is:
-
-**Will those systems be designed to make users weaker, more dependent, and more extractable — or stronger, more self-aware, and more respected?**
-
-Perfect Pupil is my answer to that question.
-
----
-
-## Repository Status
-
-This repository is under active development.
-
-Current priorities include:
-- stabilizing core companion systems
-- tightening build/evolution/combat integration
-- strengthening server-authoritative logic
-- implementing secure memory export/import
-- preparing for production release
-
-Some roadmap items described here are implemented only partially or are still in progress.
 
 ---
 
@@ -226,21 +252,13 @@ Some roadmap items described here are implemented only partially or are still in
 - npm
 - Base44 project configuration
 
-### Setup
-1. Clone the repository
-2. Install dependencies
-
+### Install
 ```bash
 npm install
 ```
 
-3. Copy environment variables
-
-```bash
-cp .env.example .env.local
-```
-
-4. Set the required values
+### Configure environment
+Copy `.env.example` to `.env.local` and provide the correct values:
 
 ```env
 VITE_BASE44_APP_ID=your_app_id
@@ -248,51 +266,48 @@ VITE_BASE44_APP_BASE_URL=your_backend_url
 VITE_BASE44_FUNCTIONS_VERSION=optional_functions_version
 ```
 
-5. Start the app
-
+### Start development
 ```bash
 npm run dev
 ```
 
-### Production build
-
+### Build for production
 ```bash
 npm run build
 ```
 
-### Release verification
-
+### Release check
 ```bash
 npm run check:release
 ```
 
 ---
 
-## Publishing
+## Release Direction
 
-This project is synced with Base44.
+Current release strategy is:
 
-Changes pushed to the repository can be reflected in the Base44 Builder, and production publishing is handled through the Base44 workflow.
+1. **Production web first**
+2. **Windows Store / PWA path next**
+3. **Mobile packaging after core stability and policy/payment/privacy work are locked**
 
-Release and platform notes should also be maintained in:
-
-- `RELEASE_CHECKLIST.md`
-
----
-
-## IP / Disclosure Note
-
-This repository is part of the active development of Perfect Pupil™, Epiphany.AI’s flagship product direction.
-
-Some implementation details, future hardware systems, security architecture, and long-range product mechanics may be described at a high level here without exposing all protected or proprietary details.
+This order is intentional:
+- fastest shipping path
+- lowest early platform friction
+- best environment for stabilizing core systems before mobile wrapping
 
 ---
 
-## About Epiphany.AI
+## Repository Notes
 
-Epiphany.AI is focused on building systems that humanize intelligence instead of hollowing it out.
+This repository is under active development.
 
-Perfect Pupil is the first major expression of that mission.
+Some roadmap items described here are:
+- partially implemented
+- represented in architecture/planning
+- or actively being integrated
+
+This README is meant to be the canonical public summary of the project direction without exposing all protected implementation details.
 
 ---
 
@@ -300,13 +315,18 @@ Perfect Pupil is the first major expression of that mission.
 
 **Christopher Grillos**  
 Epiphany.AI  
-Email: Epiphany.AI529@outlook.com  
-Email: cmgrillos529@gmail.com
+Epiphany.AI529@outlook.com  
+cmgrillos529@gmail.com
 
 ---
 
 ## Final Statement
 
-Perfect Pupil is not being built as “just another AI app.”
+Perfect Pupil is not being built as “just another AI companion app.”
 
-It is being built as a companion framework for a future where memory, identity, honesty, and emotional safety all matter — and where users should be able to shape, trust, and truly own the systems they grow with.
+It is being built as a companion framework for a future where:
+- memory matters
+- identity matters
+- honesty matters
+- emotional safety matters
+- and users should be able to shape and meaningfully own the systems they grow with
