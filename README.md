@@ -316,8 +316,8 @@ This README is meant to be the canonical public summary of the project direction
 **Christopher Grillos**  
 Epiphany.AI  
 Epiphany.AI529@outlook.com  
-cmgrillos529@gmail.com
-
+chrisgrillos.cg@gmail.com
+x.com @cmgdank
 ---
 
 ## Final Statement
