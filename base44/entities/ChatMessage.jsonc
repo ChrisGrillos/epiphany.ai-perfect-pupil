@@ -1,0 +1,70 @@
+{
+  "name": "ChatMessage",
+  "type": "object",
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "description": "Reference to ChatSession entity"
+    },
+    "companion_id": {
+      "type": "string",
+      "description": "Reference to Companion entity"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "user",
+        "companion",
+        "system"
+      ],
+      "description": "Who sent the message"
+    },
+    "content": {
+      "type": "string",
+      "description": "Message text content"
+    },
+    "emotion_tag": {
+      "type": "string",
+      "enum": [
+        "happy",
+        "curious",
+        "thoughtful",
+        "excited",
+        "calm",
+        "sad",
+        "frustrated",
+        "neutral"
+      ],
+      "description": "Detected or assigned emotion for this message"
+    },
+    "memories_referenced": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of CompanionMemory records recalled for this response"
+    },
+    "memories_created": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of new CompanionMemory records created from this message"
+    },
+    "is_flagged": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this message was flagged by the honesty engine"
+    },
+    "flag_reason": {
+      "type": "string",
+      "description": "Reason for flagging if is_flagged is true"
+    }
+  },
+  "required": [
+    "session_id",
+    "companion_id",
+    "role",
+    "content"
+  ]
+}

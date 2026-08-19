@@ -1,0 +1,47 @@
+{
+  "name": "UserCurrency",
+  "type": "object",
+  "properties": {
+    "pcp_balance": {
+      "type": "number",
+      "default": 0,
+      "description": "Pupil Cosmetic Points (1 USD = 100 PcP)"
+    },
+    "pcp_earned": {
+      "type": "number",
+      "default": 0,
+      "description": "Total PcP earned from battles and rewards"
+    },
+    "pcp_purchased": {
+      "type": "number",
+      "default": 0,
+      "description": "Total PcP purchased with real money"
+    },
+    "pcp_spent": {
+      "type": "number",
+      "default": 0,
+      "description": "Total PcP spent in store"
+    },
+    "pcp_wagered": {
+      "type": "number",
+      "default": 0,
+      "description": "Total PcP wagered in battles"
+    },
+    "pcp_won": {
+      "type": "number",
+      "default": 0,
+      "description": "Total PcP won from battle bets"
+    },
+    "free_pupils_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of Pupils owned"
+    },
+    "max_pupils_allowed": {
+      "type": "number",
+      "default": 2,
+      "description": "Max pupils based on subscription tier (free=2, basic=5, premium=10, elite=20)"
+    }
+  },
+  "required": []
+}

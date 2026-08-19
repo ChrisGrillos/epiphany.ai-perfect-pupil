@@ -1,0 +1,338 @@
+{
+  "name": "Companion",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "User-given name for the companion"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "infant",
+        "child",
+        "teenager",
+        "adult"
+      ],
+      "default": "infant",
+      "description": "Current life stage of the companion"
+    },
+    "starting_stage": {
+      "type": "string",
+      "enum": [
+        "infant",
+        "child",
+        "teenager"
+      ],
+      "description": "Stage user chose at creation"
+    },
+    "species": {
+      "type": "string",
+      "enum": [
+        "celestial",
+        "aquatic",
+        "forest",
+        "crystal",
+        "shadow"
+      ],
+      "description": "Base species type affecting appearance"
+    },
+    "hunger": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50
+    },
+    "happiness": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50
+    },
+    "fitness": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50
+    },
+    "knowledge_level": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 10
+    },
+    "experience_points": {
+      "type": "number",
+      "default": 0
+    },
+    "level": {
+      "type": "number",
+      "default": 1,
+      "description": "Derived from XP thresholds"
+    },
+    "personality_openness": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50
+    },
+    "personality_agreeableness": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50
+    },
+    "personality_curiosity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50
+    },
+    "personality_energy": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50
+    },
+    "personality_empathy": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50
+    },
+    "body_form": {
+      "type": "string",
+      "enum": [
+        "round",
+        "slender",
+        "sturdy",
+        "ethereal"
+      ],
+      "default": "round"
+    },
+    "body_size": {
+      "type": "string",
+      "enum": [
+        "tiny",
+        "small",
+        "medium",
+        "large"
+      ],
+      "default": "small"
+    },
+    "primary_color": {
+      "type": "string",
+      "default": "#9b87f5"
+    },
+    "secondary_color": {
+      "type": "string",
+      "default": "#7dd3c0"
+    },
+    "accent_color": {
+      "type": "string",
+      "default": "#fbbf24"
+    },
+    "special_abilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "learned_topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "avatar_url": {
+      "type": "string",
+      "description": "Generated avatar image URL"
+    },
+    "last_fed": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_exercised": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_interaction": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "evolution_dna": {
+      "type": "object",
+      "description": "DNA puzzle configuration affecting evolution"
+    },
+    "mood": {
+      "type": "string",
+      "enum": [
+        "joyful",
+        "content",
+        "neutral",
+        "sad",
+        "tired",
+        "excited",
+        "curious"
+      ],
+      "default": "content"
+    },
+    "trust_level": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 10
+    },
+    "affection_level": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 10
+    },
+    "total_care_actions": {
+      "type": "number",
+      "default": 0,
+      "description": "Lifetime count of all care actions performed"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this companion is the user's active companion"
+    },
+    "build_archetype": {
+      "type": "string",
+      "enum": [
+        "Vanguard",
+        "Guardian",
+        "Duelist",
+        "Trickster",
+        "Oracle",
+        "Caretaker",
+        "Berserker",
+        "Adaptive"
+      ],
+      "default": "Adaptive",
+      "description": "Developed combat/behavior archetype shaped by care and battle patterns"
+    },
+    "body_frame": {
+      "type": "string",
+      "enum": [
+        "Light",
+        "Balanced",
+        "Heavy",
+        "Mystic",
+        "Predatory",
+        "Support",
+        "Bulwark",
+        "Athletic",
+        "Ethereal",
+        "Agile",
+        "Sturdy"
+      ],
+      "default": "Balanced",
+      "description": "Physical build affecting combat stats and behavior"
+    },
+    "temperament": {
+      "type": "string",
+      "enum": [
+        "Calm",
+        "Fierce",
+        "Protective",
+        "Calculating",
+        "Playful",
+        "Unstable"
+      ],
+      "default": "Calm",
+      "description": "Emotional temperament influencing battle AI decisions"
+    },
+    "trait_affinity": {
+      "type": "object",
+      "properties": {
+        "aggressive": {
+          "type": "number",
+          "default": 0
+        },
+        "nurturing": {
+          "type": "number",
+          "default": 0
+        },
+        "curious": {
+          "type": "number",
+          "default": 0
+        },
+        "chaotic": {
+          "type": "number",
+          "default": 0
+        },
+        "disciplined": {
+          "type": "number",
+          "default": 0
+        }
+      },
+      "description": "Personality trait scores that evolve based on care, memories, and battles"
+    },
+    "bond_level": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 0,
+      "description": "Bond strength between user and pupil, affects battle bonuses"
+    },
+    "evolution_path": {
+      "type": "string",
+      "enum": [
+        "Guardian",
+        "Predator",
+        "Mystic",
+        "Scholar",
+        "Trickster",
+        "Adaptive"
+      ],
+      "description": "Branching evolution path chosen at teenager->adult transition"
+    },
+    "subtype": {
+      "type": "string",
+      "description": "Specialized subtype within evolution path (e.g. Aegis, Blade)"
+    },
+    "signature_passive": {
+      "type": "string",
+      "description": "Unique passive ability unlocked through evolution path and archetype"
+    },
+    "signature_ability": {
+      "type": "string",
+      "description": "Unique active ability unlocked through evolution path and combat performance"
+    },
+    "combat_damage_dealt": {
+      "type": "number",
+      "default": 0,
+      "description": "Lifetime combat damage dealt"
+    },
+    "combat_damage_blocked": {
+      "type": "number",
+      "default": 0,
+      "description": "Lifetime combat damage blocked"
+    },
+    "combat_healing_done": {
+      "type": "number",
+      "default": 0,
+      "description": "Lifetime combat healing done"
+    },
+    "combat_ally_saves": {
+      "type": "number",
+      "default": 0,
+      "description": "Lifetime ally saves in combat"
+    },
+    "combat_status_inflicted": {
+      "type": "number",
+      "default": 0,
+      "description": "Lifetime status effects inflicted"
+    }
+  },
+  "required": [
+    "name",
+    "species",
+    "starting_stage"
+  ]
+}

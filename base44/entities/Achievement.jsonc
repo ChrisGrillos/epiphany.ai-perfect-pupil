@@ -1,0 +1,46 @@
+{
+  "name": "Achievement",
+  "type": "object",
+  "properties": {
+    "achievement_key": {
+      "type": "string",
+      "description": "Unique identifier for the achievement"
+    },
+    "companion_id": {
+      "type": "string",
+      "description": "Reference to Companion entity"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "icon": {
+      "type": "string"
+    },
+    "unlocked_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "care",
+        "learning",
+        "social",
+        "evolution",
+        "battle",
+        "special"
+      ]
+    },
+    "xp_reward": {
+      "type": "number",
+      "default": 10
+    }
+  },
+  "required": [
+    "achievement_key",
+    "name"
+  ]
+}

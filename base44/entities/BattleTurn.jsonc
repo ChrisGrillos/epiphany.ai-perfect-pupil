@@ -1,0 +1,125 @@
+{
+  "name": "BattleTurn",
+  "type": "object",
+  "properties": {
+    "battle_id": {
+      "type": "string",
+      "description": "Reference to Battle entity"
+    },
+    "round_number": {
+      "type": "number",
+      "description": "Which round this turn belongs to"
+    },
+    "turn_index": {
+      "type": "number",
+      "description": "Order within the round (from initiative queue)"
+    },
+    "actor_roster_id": {
+      "type": "string",
+      "description": "PupilRoster ID of the acting unit"
+    },
+    "actor_team": {
+      "type": "string",
+      "enum": [
+        "team_a",
+        "team_b"
+      ]
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "move",
+        "swap",
+        "skip",
+        "auto"
+      ],
+      "description": "What the actor chose to do"
+    },
+    "move_id": {
+      "type": "string",
+      "description": "Which move was used (if action_type is move)"
+    },
+    "target_roster_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "PupilRoster IDs targeted by this action"
+    },
+    "damage_dealt": {
+      "type": "number",
+      "default": 0
+    },
+    "damage_resisted": {
+      "type": "number",
+      "default": 0
+    },
+    "healing_done": {
+      "type": "number",
+      "default": 0
+    },
+    "statuses_applied": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "target_id": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "statuses_removed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Status effect IDs that expired or were cleansed"
+    },
+    "is_critical": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_miss": {
+      "type": "boolean",
+      "default": false
+    },
+    "triangle_bonus": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether alignment triangle advantage applied"
+    },
+    "element_bonus": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether elemental advantage applied"
+    },
+    "ko_triggered": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this action caused a KO"
+    },
+    "hp_snapshot": {
+      "type": "object",
+      "description": "HP state of all units after this turn resolves"
+    },
+    "narration": {
+      "type": "string",
+      "description": "Optional flavor text for this turn"
+    }
+  },
+  "required": [
+    "battle_id",
+    "round_number",
+    "turn_index",
+    "actor_roster_id",
+    "actor_team",
+    "action_type"
+  ]
+}

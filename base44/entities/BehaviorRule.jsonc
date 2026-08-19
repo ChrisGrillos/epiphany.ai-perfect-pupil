@@ -1,0 +1,54 @@
+{
+  "name": "BehaviorRule",
+  "type": "object",
+  "properties": {
+    "companion_id": {
+      "type": "string"
+    },
+    "rule_name": {
+      "type": "string",
+      "description": "Human-readable rule name"
+    },
+    "rule_description": {
+      "type": "string",
+      "description": "Original natural language input"
+    },
+    "condition": {
+      "type": "string",
+      "description": "When this rule should trigger (e.g., 'when_user_greets')"
+    },
+    "action": {
+      "type": "string",
+      "description": "What the companion should do"
+    },
+    "priority": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50,
+      "description": "Rule priority (higher = more important)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "trigger_count": {
+      "type": "number",
+      "default": 0,
+      "description": "How many times this rule has been triggered"
+    },
+    "personality_modifiers": {
+      "type": "object",
+      "description": "Personality trait adjustments this rule makes"
+    },
+    "parsed_metadata": {
+      "type": "object",
+      "description": "LLM-parsed structured data from natural language"
+    }
+  },
+  "required": [
+    "companion_id",
+    "rule_name",
+    "rule_description"
+  ]
+}

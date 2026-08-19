@@ -1,0 +1,273 @@
+{
+  "name": "PupilRoster",
+  "type": "object",
+  "properties": {
+    "companion_id": {
+      "type": "string",
+      "description": "Reference to Companion entity"
+    },
+    "creature_template": {
+      "type": "string",
+      "description": "One of 50 creatures (e.g., 'rivet_sentinel')"
+    },
+    "creature_name": {
+      "type": "string",
+      "description": "Display name for this roster creature"
+    },
+    "chassis_family": {
+      "type": "string",
+      "enum": [
+        "automata",
+        "golems",
+        "elementals",
+        "beasts",
+        "humanoids",
+        "undead",
+        "celestials",
+        "insectoids"
+      ]
+    },
+    "alignment": {
+      "type": "string",
+      "enum": [
+        "guardian",
+        "rogue",
+        "cipher"
+      ]
+    },
+    "element": {
+      "type": "string",
+      "enum": [
+        "heat",
+        "tide",
+        "gale",
+        "stone",
+        "volt",
+        "vine",
+        "lumen",
+        "umber"
+      ]
+    },
+    "evolution_stage": {
+      "type": "string",
+      "enum": [
+        "spark",
+        "cadet",
+        "brawler",
+        "vanguard",
+        "titan",
+        "mythic"
+      ],
+      "default": "spark"
+    },
+    "combat_stats": {
+      "type": "object",
+      "properties": {
+        "hp": {
+          "type": "number",
+          "default": 100
+        },
+        "max_hp": {
+          "type": "number",
+          "default": 100
+        },
+        "guard": {
+          "type": "number",
+          "default": 10
+        },
+        "power": {
+          "type": "number",
+          "default": 10
+        },
+        "speed": {
+          "type": "number",
+          "default": 10
+        },
+        "focus": {
+          "type": "number",
+          "default": 10
+        },
+        "will": {
+          "type": "number",
+          "default": 10
+        }
+      }
+    },
+    "base_stats": {
+      "type": "object",
+      "description": "Unmodified stats before loadout/composition bonuses",
+      "properties": {
+        "hp": {
+          "type": "number"
+        },
+        "guard": {
+          "type": "number"
+        },
+        "power": {
+          "type": "number"
+        },
+        "speed": {
+          "type": "number"
+        },
+        "focus": {
+          "type": "number"
+        },
+        "will": {
+          "type": "number"
+        }
+      }
+    },
+    "composition": {
+      "type": "object",
+      "description": "Material/medium/temp for constructs/elementals/robots"
+    },
+    "loadout": {
+      "type": "object",
+      "description": "Weapon/guard/relic for humanoids/beasts/celestials"
+    },
+    "moveset": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "move_id": {
+            "type": "string"
+          },
+          "move_name": {
+            "type": "string"
+          },
+          "move_type": {
+            "type": "string",
+            "enum": [
+              "strike",
+              "skill",
+              "utility",
+              "finisher"
+            ]
+          },
+          "taxonomy": {
+            "type": "string",
+            "enum": [
+              "smash",
+              "blast",
+              "trick",
+              "guard",
+              "boost",
+              "counter",
+              "finisher"
+            ]
+          },
+          "element": {
+            "type": "string",
+            "enum": [
+              "heat",
+              "tide",
+              "gale",
+              "stone",
+              "volt",
+              "vine",
+              "lumen",
+              "umber",
+              "neutral"
+            ]
+          },
+          "power": {
+            "type": "number"
+          },
+          "accuracy": {
+            "type": "number",
+            "default": 100
+          },
+          "cooldown": {
+            "type": "number"
+          },
+          "current_cooldown": {
+            "type": "number",
+            "default": 0
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "active_statuses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "jammed",
+              "cracked",
+              "snared",
+              "marked",
+              "drained",
+              "rot",
+              "stunned",
+              "aegis"
+            ]
+          },
+          "duration": {
+            "type": "number"
+          },
+          "source_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "auto_battle_enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "tactics_profile": {
+      "type": "string",
+      "enum": [
+        "aggressive",
+        "balanced",
+        "defensive",
+        "control"
+      ],
+      "default": "balanced"
+    },
+    "total_battles": {
+      "type": "number",
+      "default": 0
+    },
+    "wins": {
+      "type": "number",
+      "default": 0
+    },
+    "losses": {
+      "type": "number",
+      "default": 0
+    },
+    "draws": {
+      "type": "number",
+      "default": 0
+    },
+    "total_xp": {
+      "type": "number",
+      "default": 0
+    },
+    "is_fainted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether unit is KO'd in current battle"
+    },
+    "is_temporary_ai": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a temporary AI-generated unit for training battles"
+    }
+  },
+  "required": [
+    "companion_id",
+    "creature_template",
+    "chassis_family",
+    "alignment",
+    "element"
+  ]
+}

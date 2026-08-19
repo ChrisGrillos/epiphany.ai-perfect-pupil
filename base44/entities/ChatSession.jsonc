@@ -1,0 +1,52 @@
+{
+  "name": "ChatSession",
+  "type": "object",
+  "properties": {
+    "companion_id": {
+      "type": "string",
+      "description": "Reference to Companion entity"
+    },
+    "title": {
+      "type": "string",
+      "description": "Auto-generated or user-set session title"
+    },
+    "message_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Total messages in this session"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "archived",
+        "deleted"
+      ],
+      "default": "active"
+    },
+    "mood_at_start": {
+      "type": "string",
+      "description": "Companion mood when session began"
+    },
+    "mood_at_end": {
+      "type": "string",
+      "description": "Companion mood when session ended"
+    },
+    "trust_delta": {
+      "type": "number",
+      "default": 0,
+      "description": "Change in trust during this session"
+    },
+    "prompt_version_id": {
+      "type": "string",
+      "description": "Which prompt template version was used"
+    },
+    "last_message_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "companion_id"
+  ]
+}

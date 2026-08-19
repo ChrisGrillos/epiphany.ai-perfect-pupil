@@ -1,0 +1,60 @@
+{
+  "name": "AlgorithmState",
+  "type": "object",
+  "properties": {
+    "companion_id": {
+      "type": "string"
+    },
+    "current_state": {
+      "type": "string",
+      "enum": [
+        "content",
+        "needy",
+        "playful",
+        "learning",
+        "tired",
+        "grumpy",
+        "excited",
+        "withdrawn"
+      ],
+      "default": "content",
+      "description": "Current state in the state machine"
+    },
+    "state_duration": {
+      "type": "number",
+      "default": 0,
+      "description": "How long in current state (minutes)"
+    },
+    "transition_probabilities": {
+      "type": "object",
+      "description": "Likelihood of transitioning to each state"
+    },
+    "behavioral_flags": {
+      "type": "object",
+      "description": "Boolean flags affecting behavior (e.g., is_neglected, is_bonded)"
+    },
+    "response_mode": {
+      "type": "string",
+      "enum": [
+        "algorithm_only",
+        "ai_assisted",
+        "full_ai"
+      ],
+      "default": "ai_assisted"
+    },
+    "last_algorithm_update": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "decision_log": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Recent decisions made by algorithm"
+    }
+  },
+  "required": [
+    "companion_id"
+  ]
+}

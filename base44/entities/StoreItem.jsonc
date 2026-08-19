@@ -1,0 +1,90 @@
+{
+  "name": "StoreItem",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "treat",
+        "vitamin",
+        "cosmetic",
+        "theme",
+        "special",
+        "battle_item"
+      ],
+      "description": "Item category"
+    },
+    "price_pcp": {
+      "type": "number",
+      "description": "Price in PcP (primary currency)"
+    },
+    "price_usd": {
+      "type": "number",
+      "description": "Price in USD (for premium items)"
+    },
+    "effect_type": {
+      "type": "string",
+      "enum": [
+        "hunger",
+        "happiness",
+        "fitness",
+        "knowledge",
+        "appearance",
+        "ability",
+        "combat_buff"
+      ],
+      "description": "What stat or aspect this affects"
+    },
+    "effect_value": {
+      "type": "number",
+      "description": "How much it affects the stat"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Icon identifier"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "legendary"
+      ],
+      "default": "common"
+    },
+    "required_tier": {
+      "type": "string",
+      "enum": [
+        "free",
+        "basic",
+        "premium",
+        "elite"
+      ],
+      "default": "basic"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "is_available": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether item is currently purchasable"
+    },
+    "max_quantity": {
+      "type": "number",
+      "default": 99,
+      "description": "Max a user can own at once"
+    }
+  },
+  "required": [
+    "name",
+    "category"
+  ]
+}

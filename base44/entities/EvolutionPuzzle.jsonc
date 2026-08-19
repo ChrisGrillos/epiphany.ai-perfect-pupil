@@ -1,0 +1,72 @@
+{
+  "name": "EvolutionPuzzle",
+  "type": "object",
+  "properties": {
+    "companion_id": {
+      "type": "string"
+    },
+    "puzzle_type": {
+      "type": "string",
+      "enum": [
+        "body",
+        "personality",
+        "intelligence",
+        "emotional",
+        "abilities",
+        "full_helix"
+      ],
+      "description": "Which trait section this puzzle affects"
+    },
+    "current_sequence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Current arrangement of DNA elements"
+    },
+    "target_sequence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Optional target for guided puzzles"
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "completion_reward": {
+      "type": "object",
+      "description": "What trait changes result from completion"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "medium",
+        "hard",
+        "expert"
+      ],
+      "default": "easy"
+    },
+    "attempts_used": {
+      "type": "number",
+      "default": 0,
+      "description": "How many times this puzzle has been attempted"
+    },
+    "best_score": {
+      "type": "number",
+      "default": 0,
+      "description": "Best accuracy score achieved"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this puzzle is still available"
+    }
+  },
+  "required": [
+    "companion_id",
+    "puzzle_type"
+  ]
+}

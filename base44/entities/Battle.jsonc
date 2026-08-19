@@ -1,0 +1,104 @@
+{
+  "name": "Battle",
+  "type": "object",
+  "properties": {
+    "battle_type": {
+      "type": "string",
+      "enum": [
+        "training_ai",
+        "pupil_vs_pupil",
+        "pvp_ranked",
+        "pvp_casual"
+      ],
+      "description": "Type of battle"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "1v1",
+        "3v3"
+      ],
+      "default": "3v3"
+    },
+    "team_a": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of PupilRoster IDs for team A"
+    },
+    "team_b": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of PupilRoster IDs for team B"
+    },
+    "owner_a": {
+      "type": "string",
+      "description": "User ID of team A owner"
+    },
+    "owner_b": {
+      "type": "string",
+      "description": "User ID of team B owner (or 'system' for AI)"
+    },
+    "current_round": {
+      "type": "number",
+      "default": 1
+    },
+    "max_rounds": {
+      "type": "number",
+      "default": 20,
+      "description": "Max rounds before forced draw"
+    },
+    "initiative_queue": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Speed-sorted turn order for current round"
+    },
+    "winner": {
+      "type": "string",
+      "enum": [
+        "team_a",
+        "team_b",
+        "draw"
+      ],
+      "description": "Null until battle completed"
+    },
+    "pcp_bet": {
+      "type": "number",
+      "default": 0,
+      "description": "PcP wagered per side"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "waiting"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "seed": {
+      "type": "number",
+      "description": "Random seed for deterministic replay"
+    }
+  },
+  "required": [
+    "battle_type",
+    "mode",
+    "team_a",
+    "team_b"
+  ]
+}

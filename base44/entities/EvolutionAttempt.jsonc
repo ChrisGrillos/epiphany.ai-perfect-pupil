@@ -1,0 +1,58 @@
+{
+  "name": "EvolutionAttempt",
+  "type": "object",
+  "properties": {
+    "companion_id": {
+      "type": "string",
+      "description": "Reference to Companion entity"
+    },
+    "roster_id": {
+      "type": "string",
+      "description": "Reference to PupilRoster entity (if battle evolution)"
+    },
+    "puzzle_id": {
+      "type": "string",
+      "description": "Reference to EvolutionPuzzle entity"
+    },
+    "from_stage": {
+      "type": "string",
+      "description": "Stage before this attempt"
+    },
+    "to_stage": {
+      "type": "string",
+      "description": "Target stage"
+    },
+    "success": {
+      "type": "boolean",
+      "default": false
+    },
+    "stat_changes": {
+      "type": "object",
+      "description": "Stats that changed as a result of evolution"
+    },
+    "xp_cost": {
+      "type": "number",
+      "default": 0,
+      "description": "XP consumed for this evolution attempt"
+    },
+    "pcp_reward": {
+      "type": "number",
+      "default": 0,
+      "description": "PcP awarded on success"
+    },
+    "failure_reason": {
+      "type": "string",
+      "description": "Why the attempt failed (if applicable)"
+    },
+    "attempt_number": {
+      "type": "number",
+      "default": 1,
+      "description": "Which attempt this is for this stage transition"
+    }
+  },
+  "required": [
+    "companion_id",
+    "from_stage",
+    "to_stage"
+  ]
+}

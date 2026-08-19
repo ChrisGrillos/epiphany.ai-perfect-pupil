@@ -1,0 +1,43 @@
+{
+  "name": "Subscription",
+  "type": "object",
+  "properties": {
+    "tier": {
+      "type": "string",
+      "enum": [
+        "free",
+        "basic",
+        "premium",
+        "elite"
+      ],
+      "default": "free",
+      "description": "Current subscription tier"
+    },
+    "monthly_price": {
+      "type": "number",
+      "description": "Monthly price in USD"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "renewal_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of unlocked features"
+    }
+  },
+  "required": [
+    "tier"
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "name": "AIProviderConfig",
+  "type": "object",
+  "properties": {
+    "provider_name": {
+      "type": "string",
+      "enum": [
+        "openai",
+        "anthropic",
+        "grok",
+        "custom",
+        "default"
+      ],
+      "default": "default",
+      "description": "AI service provider"
+    },
+    "api_endpoint": {
+      "type": "string",
+      "description": "Custom API endpoint URL"
+    },
+    "model_name": {
+      "type": "string",
+      "description": "Specific model to use (e.g., gpt-4, claude-3)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "monthly_api_calls": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of API calls made this month"
+    },
+    "call_limit": {
+      "type": "number",
+      "description": "Monthly call limit based on tier"
+    },
+    "fallback_to_default": {
+      "type": "boolean",
+      "default": true,
+      "description": "Use default provider if custom fails"
+    },
+    "last_used": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "config_metadata": {
+      "type": "object",
+      "description": "Additional provider-specific settings"
+    }
+  },
+  "required": [
+    "provider_name"
+  ]
+}
