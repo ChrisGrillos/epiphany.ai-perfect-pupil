@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { pupil } from '@/api/pupilClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowRight, ArrowLeft, Sparkles, Heart, Shield, Brain } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Heart, Shield, Brain } from 'lucide-react';
 import { toast } from 'sonner';
 import StageSelector from '@/components/onboarding/StageSelector';
 import SpeciesSelector from '@/components/onboarding/SpeciesSelector';
-import TierCard from '@/components/subscription/TierCard';
 
-const STEPS = ['welcome', 'stage', 'species', 'name', 'tier', 'creating'];
+
+const STEPS = ['welcome', 'stage', 'species', 'name', 'creating'];
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ export default function Welcome() {
     name: '',
     stage: 'child',
     species: 'celestial',
-    tier: 'free'
+    tier: 'elite'
   });
   const [isCreating, setIsCreating] = useState(false);
   
@@ -29,7 +29,7 @@ export default function Welcome() {
   }, []);
   
   const checkExistingCompanion = async () => {
-    const companions = await base44.entities.Companion.list();
+    const companions = await pupil.entities.Companion.list();
     if (companions.length > 0) {
       navigate(createPageUrl('Home'));
     }
@@ -51,14 +51,7 @@ export default function Welcome() {
     setIsCreating(true);
     setStep(STEPS.indexOf('creating'));
     try {
-      const tierResponse = await base44.functions.invoke('setSubscriptionTier', {
-        tier: formData.tier
-      });
-      if (tierResponse.data?.error) {
-        throw new Error(tierResponse.data.error);
-      }
-
-      const createResponse = await base44.functions.invoke('createCompanion', {
+      const createResponse = await pupil.functions.invoke('createCompanion', {
         name: formData.name,
         stage: formData.stage,
         species: formData.species
@@ -72,7 +65,7 @@ export default function Welcome() {
       }, 1200);
     } catch (error) {
       toast.error(error?.message || 'Unable to create companion right now.');
-      setStep(STEPS.indexOf('tier'));
+      setStep(STEPS.indexOf('name'));
       setIsCreating(false);
     }
   };
@@ -124,8 +117,8 @@ export default function Welcome() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                 {[
                   { icon: Heart, title: 'Empathy First', desc: 'Learn and grow together through meaningful interactions' },
-                  { icon: Shield, title: 'Privacy Safe', desc: 'Your data belongs to you, always encrypted and secure' },
-                  { icon: Brain, title: 'Honest AI', desc: '100% truthful feedback with emotional intelligence' }
+                  { icon: Shield, title: 'Privacy Safe', desc: 'Saved on this device; cloud models are optional' },
+                  { icon: Brain, title: 'Honest AI', desc: 'Designed for honest, thoughtful conversation' }
                 ].map((feature, i) => (
                   <motion.div
                     key={i}
@@ -241,53 +234,12 @@ export default function Welcome() {
                   Back
                 </Button>
                 <Button 
-                  onClick={handleNext} 
+                  onClick={handleCreate}
                   disabled={!formData.name.trim()}
                   className="bg-violet-600 hover:bg-violet-700"
                 >
-                  Continue
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </motion.div>
-          )}
-          
-          {/* Tier Selection */}
-          {currentStep === 'tier' && (
-            <motion.div
-              key="tier"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                  Choose Your Plan
-                </h2>
-                <p className="text-slate-500">
-                  Start free or unlock premium features
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {['free', 'basic', 'premium', 'elite'].map((tier) => (
-                  <TierCard
-                    key={tier}
-                    tier={tier}
-                    isCurrentTier={formData.tier === tier}
-                    onSelect={(t) => setFormData({ ...formData, tier: t })}
-                  />
-                ))}
-              </div>
-              
-              <div className="flex justify-between mt-8">
-                <Button variant="outline" onClick={handleBack}>
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Button>
-                <Button onClick={handleCreate} className="bg-violet-600 hover:bg-violet-700">
                   Create My Companion
-                  <Sparkles className="w-4 h-4 ml-2" />
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
             </motion.div>

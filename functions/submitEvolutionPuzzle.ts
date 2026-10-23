@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from '../server/runtime.js';
 import {
   buildUserOwnerKeys,
   getOwnedRecordById,
@@ -18,10 +18,10 @@ function normalizeDifficulty(raw: any): string {
   return DIFFICULTY_XP_MULTIPLIER[difficulty] ? difficulty : 'easy';
 }
 
-Deno.serve(async (req) => {
+export default (async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const pupil = createClientFromRequest(req);
+    const user = await pupil.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     }
 
     const ownerKeys = buildUserOwnerKeys(user);
-    const entitlements = await resolveUserEntitlements(base44, ownerKeys);
+    const entitlements = await resolveUserEntitlements(pupil, ownerKeys);
     if (!isTierAtLeast(entitlements.tier, 'premium')) {
       return Response.json(
         { error: `Evolution puzzle is available on Premium or Elite. Your current tier is ${entitlements.tier}.` },
@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const companion = await getOwnedRecordById(base44, 'Companion', companionId, ownerKeys);
+    const companion = await getOwnedRecordById(pupil, 'Companion', companionId, ownerKeys);
     if (!companion) {
       return Response.json({ error: 'Companion not found or not owned by caller.' }, { status: 404 });
     }
@@ -55,14 +55,15 @@ Deno.serve(async (req) => {
       personality_curiosity: Math.floor(Math.random() * 3) + 1
     };
     const updatePayload = {
-      ...bonuses,
+      personality_openness: Math.min(100, Number(companion.personality_openness || 0) + bonuses.personality_openness),
+      personality_curiosity: Math.min(100, Number(companion.personality_curiosity || 0) + bonuses.personality_curiosity),
       experience_points: Number(companion.experience_points || 0) + xpGain,
       evolution_dna: evolutionDna
     };
 
-    await base44.asServiceRole.entities.Companion.update(companionId, updatePayload);
+    await pupil.service.entities.Companion.update(companionId, updatePayload);
 
-    const puzzle = await base44.asServiceRole.entities.EvolutionPuzzle.create({
+    const puzzle = await pupil.service.entities.EvolutionPuzzle.create({
       companion_id: companionId,
       puzzle_type: 'full_helix',
       completed: true,

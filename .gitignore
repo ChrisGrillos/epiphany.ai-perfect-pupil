@@ -29,3 +29,12 @@ dist-ssr
 *.sw?
 
 .env
+
+# Local state and verification output
+.env.local
+*.sqlite*
+output/
+test-results/
+training/.venv/
+training/checkpoints/
+__pycache__/

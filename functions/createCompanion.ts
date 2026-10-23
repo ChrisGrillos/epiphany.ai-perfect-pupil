@@ -1,7 +1,8 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from '../server/runtime.js';
 import {
   buildUserOwnerKeys,
   getUserCurrencyRecord,
+  ensureCompanionCombatRosterUnit,
   listOwnedRecords,
   recomputeCompanionIdentity,
   resolveUserEntitlements
@@ -23,10 +24,10 @@ function normalizeSpecies(raw: any): string {
   return species || 'celestial';
 }
 
-Deno.serve(async (req) => {
+export default (async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const pupil = createClientFromRequest(req);
+    const user = await pupil.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -44,8 +45,8 @@ Deno.serve(async (req) => {
     }
 
     const ownerKeys = buildUserOwnerKeys(user);
-    const entitlements = await resolveUserEntitlements(base44, ownerKeys);
-    const companions = await listOwnedRecords(base44, 'Companion', ownerKeys);
+    const entitlements = await resolveUserEntitlements(pupil, ownerKeys);
+    const companions = await listOwnedRecords(pupil, 'Companion', ownerKeys);
     const currentCount = companions.length;
 
     if (currentCount >= Number(entitlements.max_pupils_allowed || 2)) {
@@ -100,29 +101,33 @@ Deno.serve(async (req) => {
     };
 
     const identityPatch = recomputeCompanionIdentity(baseCompanion, { recomputedAt: now });
-    const companion = await base44.entities.Companion.create({
+    const companion = await pupil.entities.Companion.create({
       ...baseCompanion,
       ...identityPatch
     });
 
     const nextCount = currentCount + 1;
-    const currency = await getUserCurrencyRecord(base44, ownerKeys);
+    await pupil.entities.AlgorithmState.create({ companion_id: companion.id, current_state: 'content', behavioral_flags: {}, response_mode: 'default', transition_probabilities: {} });
+    const currency = await getUserCurrencyRecord(pupil, ownerKeys);
     if (currency?.id) {
-      await base44.asServiceRole.entities.UserCurrency.update(currency.id, {
+      await pupil.service.entities.UserCurrency.update(currency.id, {
         max_pupils_allowed: entitlements.max_pupils_allowed,
         free_pupils_count: nextCount
       });
     } else {
-      await base44.entities.UserCurrency.create({
+      await pupil.entities.UserCurrency.create({
         pcp_balance: 0,
         free_pupils_count: nextCount,
         max_pupils_allowed: entitlements.max_pupils_allowed
       });
     }
 
+    const combatRosterUnit = await ensureCompanionCombatRosterUnit(pupil, companion);
+
     return Response.json({
       success: true,
       companion,
+      combat_roster_unit: combatRosterUnit,
       tier: entitlements.tier,
       max_pupils_allowed: entitlements.max_pupils_allowed,
       current_pupils: nextCount

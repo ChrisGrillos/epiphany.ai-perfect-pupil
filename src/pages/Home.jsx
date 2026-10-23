@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { pupil } from '@/api/pupilClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
@@ -33,16 +33,23 @@ export default function Home() {
   const [chatMessages, setChatMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [actionInProgress, setActionInProgress] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+  const [chatError, setChatError] = useState('');
+  const [loadError, setLoadError] = useState('');
+  const [trainingAllowed, setTrainingAllowed] = useState(false);
+  const controllerRef = useRef(null);
+  const sendingRef = useRef(false);
   
   useEffect(() => {
-    loadData();
+    loadData().catch(error => { setLoadError(error.message); setLoading(false); });
+    return () => controllerRef.current?.abort();
   }, []);
   
   const loadData = async () => {
     const [companions, subscriptions, entitlementResponse] = await Promise.all([
-      base44.entities.Companion.list(),
-      base44.entities.Subscription.list(),
-      base44.functions.invoke('getEntitlements', {})
+      pupil.entities.Companion.list(),
+      pupil.entities.Subscription.list(),
+      pupil.functions.invoke('getEntitlements', {})
     ]);
     
     if (companions.length === 0) {
@@ -53,6 +60,12 @@ export default function Home() {
     setCompanion(companions[0]);
     const entitlementTier = entitlementResponse?.data?.tier;
     setSubscription(entitlementTier ? { tier: entitlementTier } : (subscriptions[0] || { tier: 'free' }));
+    const sessions = await pupil.entities.ChatSession.filter({ companion_id: companions[0].id, is_imported: false }, '-updated_date', 1);
+    if (sessions[0]) {
+      setSessionId(sessions[0].id);
+      const messages = await pupil.entities.ChatMessage.filter({ session_id: sessions[0].id });
+      setChatMessages(messages.map(m => ({ ...m, emotion: m.emotion_tag })));
+    }
     setLoading(false);
   };
   
@@ -66,7 +79,7 @@ export default function Home() {
     
     setActionInProgress(true);
     
-    const response = await base44.functions.invoke('applyCompanionAction', {
+    const response = await pupil.functions.invoke('applyCompanionAction', {
       companion_id: companion.id,
       action_type: actionType
     });
@@ -82,7 +95,7 @@ export default function Home() {
     setActionInProgress(false);
 
     // Phase 5: Check achievements after care action
-    base44.functions.invoke('checkAchievements', { companion_id: companion.id }).then(res => {
+    pupil.functions.invoke('checkAchievements', { companion_id: companion.id }).then(res => {
       if (res.data?.newly_unlocked?.length > 0) {
         res.data.newly_unlocked.forEach(a => {
           toast.success(`🏆 Achievement Unlocked: ${a.key.replace(/_/g, ' ')} (+${a.xp} XP)`);
@@ -92,41 +105,41 @@ export default function Home() {
   };
   
   const handleSendMessage = async (message) => {
-    if (!companion) return;
-    
+    if (!companion || sendingRef.current) return;
+    sendingRef.current = true;
+    const controller = new AbortController(); controllerRef.current = controller;
+    setChatError(''); setIsTyping(true);
     setChatMessages(prev => [...prev, { role: 'user', content: message }]);
-    setIsTyping(true);
-    
-    // Use memory-aware companion chat backend
-    const response = await base44.functions.invoke('companionChat', {
-      companion_id: companion.id,
-      message
-    });
-
-    setIsTyping(false);
-
-    if (response.data.error) {
-      setChatMessages(prev => [...prev, { role: 'assistant', content: "Hmm... I got a little confused. Can you try again?" }]);
-      return;
-    }
-
-    setChatMessages(prev => [...prev, { 
-      role: 'assistant', 
-      content: response.data.response,
-      emotion: response.data.emotion,
-      memoryCreated: response.data.memory_created
-    }]);
-    
-    setCompanion(prev => ({
-      ...prev,
-      trust_level: Math.min(100, (prev.trust_level || 0) + 1)
-    }));
+    try {
+      const { data } = await pupil.functions.invoke('companionChat', {
+        companion_id: companion.id, message, ...(sessionId ? { session_id: sessionId } : {}),
+        request_id: crypto.randomUUID(), training_allowed: trainingAllowed,
+      }, { signal: controller.signal });
+      if (data.error) throw new Error(data.error);
+      setSessionId(data.session_id);
+      setChatMessages(prev => [...prev, { role: 'assistant', content: data.response, emotion: data.emotion, provider: data.provider, model: data.model, fallback: data.fallback, response_source: data.response_source, suggested_memory: data.suggested_memory }]);
+      setCompanion(prev => ({ ...prev, trust_level: Math.min(100, (prev.trust_level || 0) + 1) }));
+    } catch (error) { setChatError(error.name === 'AbortError' ? 'Generation stopped. Reload to check whether the response was saved.' : error.message); }
+    finally { sendingRef.current = false; setIsTyping(false); }
   };
-  
+  const newConversation = async () => {
+    const { data } = await pupil.functions.invoke('newChatSession', { companion_id: companion.id });
+    if (data.error) return toast.error(data.error);
+    setSessionId(data.id); setChatMessages([]); setChatError('');
+  };
+  const saveSuggestedMemory = async (memory, index) => {
+    try {
+      await pupil.entities.CompanionMemory.create({ companion_id: companion.id, memory_key: memory.key, memory_value: memory.value, memory_type: memory.type, importance: memory.importance, tags: memory.tags });
+      setChatMessages(prev => prev.map((m, i) => i === index ? { ...m, suggested_memory: null } : m));
+      toast.success('Memory saved');
+    } catch (error) { toast.error(error.message); }
+  };
+
   const handlePuzzleClick = () => {
     navigate(createPageUrl('Evolution'));
   };
   
+  if (loadError) return <main role="alert" className="p-10"><p>{loadError}</p><Button onClick={() => window.location.reload()}>Reload</Button></main>;
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-cyan-50 flex items-center justify-center">
@@ -304,14 +317,23 @@ export default function Home() {
                 </motion.div>
               </TabsContent>
               
-              <TabsContent value="chat" className="mt-0 h-[500px]">
+              <TabsContent value="chat" className="mt-0 space-y-3">
+                <div className="flex flex-wrap items-center gap-3 text-sm">
+                  <Button variant="outline" size="sm" onClick={() => navigate('/AISettings')}>Model settings</Button>
+                  <Button variant="outline" size="sm" onClick={newConversation} disabled={isTyping}>New conversation</Button>
+                  {isTyping && <Button variant="outline" size="sm" onClick={() => controllerRef.current?.abort()}>Stop</Button>}
+                </div>
+                <label className="flex gap-2 text-xs text-slate-500"><input type="checkbox" checked={trainingAllowed} onChange={e => setTrainingAllowed(e.target.checked)} />Allow these messages and their context for optional training review. Nothing trains automatically.</label>
+                {chatError && <p role="alert" className="text-sm text-red-700">{chatError}</p>}
+                <div className="h-[500px]">
                 <ChatInterface
                   companion={companion}
                   messages={chatMessages}
                   onSendMessage={handleSendMessage}
                   isTyping={isTyping}
-                  disabled={subscription?.tier === 'free' && chatMessages.length >= 10}
+                  onSaveMemory={saveSuggestedMemory}
                 />
+                </div>
               </TabsContent>
               
               <TabsContent value="stats" className="mt-0 space-y-4">

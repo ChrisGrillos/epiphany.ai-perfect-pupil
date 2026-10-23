@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from '../server/runtime.js';
 import {
   buildUserOwnerKeys,
   clampStat,
@@ -25,10 +25,10 @@ const TRAIT_FIELD_MAP: Record<string, string> = {
   supportive: 'personality_empathy'
 };
 
-Deno.serve(async (req) => {
+export default (async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const pupil = createClientFromRequest(req);
+    const user = await pupil.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     }
 
     const ownerKeys = buildUserOwnerKeys(user);
-    const entitlements = await resolveUserEntitlements(base44, ownerKeys);
+    const entitlements = await resolveUserEntitlements(pupil, ownerKeys);
     if (!isTierAtLeast(entitlements.tier, 'basic')) {
       return Response.json(
         { error: `Natural language customization requires Basic or above. Your current tier is ${entitlements.tier}.` },
@@ -52,18 +52,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    const companion = await getOwnedRecordById(base44, 'Companion', companionId, ownerKeys);
+    const companion = await getOwnedRecordById(pupil, 'Companion', companionId, ownerKeys);
     if (!companion) {
       return Response.json({ error: 'Companion not found or not owned by caller.' }, { status: 404 });
     }
 
     const limits = CUSTOMIZATION_LIMITS[entitlements.tier] || CUSTOMIZATION_LIMITS.free;
     const [existingMemories, existingRules] = await Promise.all([
-      base44.asServiceRole.entities.CompanionMemory.filter({ companion_id: companionId }),
-      base44.asServiceRole.entities.BehaviorRule.filter({ companion_id: companionId })
+      pupil.service.entities.CompanionMemory.filter({ companion_id: companionId }),
+      pupil.service.entities.BehaviorRule.filter({ companion_id: companionId })
     ]);
 
-    const parseResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    const parseResult = await pupil.service.integrations.Core.InvokeLLM({
       prompt: `You are a behavior parser for an AI companion. Extract structured customization data from the following natural language input.
 
 Input: "${content}"
@@ -138,14 +138,14 @@ Be specific and actionable. If the input is vague, make reasonable interpretatio
 
     for (const memory of parsedMemories) {
       if (!memory?.key || !memory?.value) continue;
-      const created = await base44.asServiceRole.entities.CompanionMemory.create({
+      const created = await pupil.service.entities.CompanionMemory.create({
         companion_id: companionId,
         memory_key: String(memory.key).trim(),
         memory_value: String(memory.value).trim(),
         memory_type: memory.type || 'fact',
         importance: 70,
         source: 'notepad',
-        is_encrypted: true,
+        is_encrypted: false,
         tags: []
       });
       createdMemories.push(created);
@@ -153,7 +153,7 @@ Be specific and actionable. If the input is vague, make reasonable interpretatio
 
     for (const rule of parsedRules) {
       if (!rule?.name) continue;
-      const created = await base44.asServiceRole.entities.BehaviorRule.create({
+      const created = await pupil.service.entities.BehaviorRule.create({
         companion_id: companionId,
         rule_name: String(rule.name).trim(),
         rule_description: rule.description || '',
@@ -175,7 +175,7 @@ Be specific and actionable. If the input is vague, make reasonable interpretatio
     }
 
     if (Object.keys(traitUpdates).length > 0) {
-      await base44.asServiceRole.entities.Companion.update(companionId, traitUpdates);
+      await pupil.service.entities.Companion.update(companionId, traitUpdates);
     }
 
     return Response.json({

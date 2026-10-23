@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { pupil } from '@/api/pupilClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
@@ -36,9 +36,9 @@ export default function Inventory() {
   
   const loadData = async () => {
     const [inv, companions, items] = await Promise.all([
-      base44.entities.Inventory.list(),
-      base44.entities.Companion.list(),
-      base44.entities.StoreItem.list()
+      pupil.entities.Inventory.list(),
+      pupil.entities.Companion.list(),
+      pupil.entities.StoreItem.list()
     ]);
     
     // Enrich inventory with item details
@@ -53,53 +53,16 @@ export default function Inventory() {
   };
   
   const handleUseItem = async (inventoryItem) => {
-    if (!companion || !inventoryItem.details) return;
-    
+    if (!companion) return;
     setUsing(inventoryItem.id);
-    
-    // Apply item effect
-    const item = inventoryItem.details;
-    let updates = {};
-    
-    switch (item.effect_type) {
-      case 'hunger':
-        updates.hunger = Math.min(100, companion.hunger + item.effect_value);
-        break;
-      case 'happiness':
-        updates.happiness = Math.min(100, companion.happiness + item.effect_value);
-        break;
-      case 'fitness':
-        updates.fitness = Math.min(100, companion.fitness + item.effect_value);
-        break;
-      case 'knowledge':
-        updates.knowledge_level = Math.min(100, companion.knowledge_level + item.effect_value);
-        break;
-    }
-    
-    if (Object.keys(updates).length > 0) {
-      await base44.entities.Companion.update(companion.id, updates);
-      setCompanion({ ...companion, ...updates });
-    }
-    
-    // Remove or decrease quantity
-    if (inventoryItem.quantity <= 1) {
-      await base44.entities.Inventory.delete(inventoryItem.id);
-      setInventory(prev => prev.filter(i => i.id !== inventoryItem.id));
-    } else {
-      await base44.entities.Inventory.update(inventoryItem.id, {
-        quantity: inventoryItem.quantity - 1
-      });
-      setInventory(prev => prev.map(i => 
-        i.id === inventoryItem.id 
-          ? { ...i, quantity: i.quantity - 1 }
-          : i
-      ));
-    }
-    
-    toast.success(`Used ${item.name}! +${item.effect_value} ${item.effect_type}`);
-    setUsing(null);
+    try {
+      const { data } = await pupil.functions.invoke('useInventoryItem', { inventory_id: inventoryItem.id, companion_id: companion.id });
+      if (data.error) throw new Error(data.error);
+      await loadData(); toast.success('Item used');
+    } catch (error) { toast.error(error.message); }
+    finally { setUsing(null); }
   };
-  
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-cyan-50 flex items-center justify-center">

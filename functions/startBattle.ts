@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from '../server/runtime.js';
 import {
   buildDeterministicInitiativeQueue,
   buildUserOwnerKeys,
@@ -49,10 +49,10 @@ function normalizeRosterIds(input: unknown): string[] {
     .filter(Boolean);
 }
 
-Deno.serve(async (req) => {
+export default (async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const pupil = createClientFromRequest(req);
+    const user = await pupil.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -64,6 +64,15 @@ Deno.serve(async (req) => {
     }
 
     const { battle_type, mode, team_a_ids, team_b_ids, pcp_bet } = await req.json();
+
+    if (battle_type !== 'training_ai' || !['1v1', '3v3'].includes(mode)) {
+      return Response.json({ error: 'The local edition supports 1v1 or 3v3 training battles.' }, { status: 400 });
+    }
+
+    const activeBattles = await pupil.entities.Battle.filter({ status: 'in_progress' });
+    if (activeBattles.length) {
+      return Response.json({ error: 'Resume your active battle before starting another.' }, { status: 409 });
+    }
 
     if (!battle_type || !mode) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
@@ -81,7 +90,7 @@ Deno.serve(async (req) => {
     // Team A must always be owned by the caller.
     const teamAUnits = [];
     for (const id of teamAIds) {
-      const unit = await getOwnedRecordById(base44, 'PupilRoster', id, ownerKeys);
+      const unit = await getOwnedRecordById(pupil, 'PupilRoster', id, ownerKeys);
       if (!unit) {
         return Response.json({ error: `Roster unit ${id} not found or not owned by caller` }, { status: 404 });
       }
@@ -99,7 +108,7 @@ Deno.serve(async (req) => {
 
     let validatedBet = 0;
     if (bet > 0) {
-      const currency = await getUserCurrencyRecord(base44, ownerKeys);
+      const currency = await getUserCurrencyRecord(pupil, ownerKeys);
       if (!currency || Number(currency.pcp_balance || 0) < bet) {
         return Response.json({ error: 'Insufficient PcP balance for bet' }, { status: 400 });
       }
@@ -114,7 +123,7 @@ Deno.serve(async (req) => {
       const difficulty = mode === '1v1' ? 'training_easy' : 'training_medium';
       const template = AI_TEMPLATES[difficulty];
       for (let i = 0; i < expectedSize; i++) {
-        const aiUnit = await base44.asServiceRole.entities.PupilRoster.create({
+        const aiUnit = await pupil.service.entities.PupilRoster.create({
           companion_id: 'system',
           creature_template: template.creature_template,
           creature_name: `${template.creature_template}_${i + 1}`,
@@ -143,7 +152,7 @@ Deno.serve(async (req) => {
       }
 
       for (const id of normalizedTeamBIds) {
-        const rows = await base44.asServiceRole.entities.PupilRoster.filter({ id });
+        const rows = await pupil.service.entities.PupilRoster.filter({ id });
         if (!rows || rows.length === 0) {
           return Response.json({ error: `Roster unit ${id} not found` }, { status: 404 });
         }
@@ -167,7 +176,7 @@ Deno.serve(async (req) => {
     const seed = createSecureSeed();
     const initiativeQueue = buildDeterministicInitiativeQueue(teamAUnits, teamBUnits, seed);
 
-    const battle = await base44.entities.Battle.create({
+    const battle = await pupil.entities.Battle.create({
       battle_type,
       mode,
       team_a: teamAIds,
@@ -183,9 +192,9 @@ Deno.serve(async (req) => {
     });
 
     if (validatedBet > 0) {
-      const currency = await getUserCurrencyRecord(base44, ownerKeys);
+      const currency = await getUserCurrencyRecord(pupil, ownerKeys);
       if (currency) {
-        await base44.asServiceRole.entities.UserCurrency.update(currency.id, {
+        await pupil.service.entities.UserCurrency.update(currency.id, {
           pcp_balance: Number(currency.pcp_balance || 0) - validatedBet,
           pcp_wagered: Number(currency.pcp_wagered || 0) + validatedBet
         });

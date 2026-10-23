@@ -1,6 +1,7 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from '../server/runtime.js';
 import {
   buildUserOwnerKeys,
+  ensureCompanionCombatRosterUnit,
   getOwnedRecordById,
   isTierAtLeast,
   recomputeCompanionIdentity,
@@ -74,10 +75,10 @@ function hasRequiredTraits(companion: any, requiredTraits: Record<string, number
   return true;
 }
 
-Deno.serve(async (req) => {
+export default (async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const pupil = createClientFromRequest(req);
+    const user = await pupil.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -101,7 +102,7 @@ Deno.serve(async (req) => {
     }
 
     const ownerKeys = buildUserOwnerKeys(user);
-    const entitlements = await resolveUserEntitlements(base44, ownerKeys);
+    const entitlements = await resolveUserEntitlements(pupil, ownerKeys);
     if (!isTierAtLeast(entitlements.tier, 'premium')) {
       return Response.json(
         { error: `Evolution path control requires Premium or Elite. Your current tier is ${entitlements.tier}.` },
@@ -109,7 +110,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const companion = await getOwnedRecordById(base44, 'Companion', companionId, ownerKeys);
+    const companion = await getOwnedRecordById(pupil, 'Companion', companionId, ownerKeys);
     if (!companion) {
       return Response.json({ error: 'Companion not found or not owned by caller.' }, { status: 404 });
     }
@@ -139,10 +140,16 @@ Deno.serve(async (req) => {
       )
     );
 
-    await base44.asServiceRole.entities.Companion.update(companionId, updatePayload);
+    await pupil.service.entities.Companion.update(companionId, updatePayload);
+    const updatedCompanion = { ...companion, ...updatePayload };
+    const combatRosterUnit = await ensureCompanionCombatRosterUnit(pupil, updatedCompanion, {
+      refreshExisting: true
+    });
+
     return Response.json({
       success: true,
-      companion: { ...companion, ...updatePayload }
+      companion: updatedCompanion,
+      combat_roster_unit: combatRosterUnit
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

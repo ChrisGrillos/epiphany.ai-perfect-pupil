@@ -68,6 +68,7 @@ export default function BattleArena({
   const [battleLog, setBattleLog] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const enemyAutoResolveRoundRef = useRef('');
+  const turnInFlightRef = useRef(false);
 
   const actionableSlot = useMemo(
     () =>
@@ -105,12 +106,13 @@ export default function BattleArena({
   }, [isPlayerTurn, enemyTeam, selectedTarget]);
 
   useEffect(() => {
-    if (!autoBattle || !isPlayerTurn || !currentActor || submitting) return;
-    executeAutoTurn();
-  }, [autoBattle, isPlayerTurn, currentActor, submitting]);
+    if (!autoBattle || !isPlayerTurn || !currentActor || submitting || battle?.status !== 'in_progress') return;
+    const timer = setTimeout(executeAutoTurn, 500);
+    return () => clearTimeout(timer);
+  }, [autoBattle, isPlayerTurn, currentActor, submitting, battle?.status, battle?.current_round]);
 
   useEffect(() => {
-    if (isPlayerTurn || submitting) return;
+    if (isPlayerTurn || submitting || battle?.status !== 'in_progress') return;
     if (!battle?.id) return;
 
     const roundKey = `${battle.id}:${battle.current_round}`;
@@ -118,7 +120,7 @@ export default function BattleArena({
     enemyAutoResolveRoundRef.current = roundKey;
 
     resolveEnemyPhase();
-  }, [isPlayerTurn, submitting, battle?.id, battle?.current_round]);
+  }, [isPlayerTurn, submitting, battle?.id, battle?.current_round, battle?.status]);
 
   const chooseAutoMove = (unit) => {
     const availableMoves = (unit.moveset || []).filter(m => Number(m.current_cooldown || 0) === 0);
@@ -133,63 +135,29 @@ export default function BattleArena({
     return { move: preferredMove, target };
   };
 
-  const resolveEnemyPhase = async () => {
-    setSubmitting(true);
+  const sendTurn = async (actions) => {
+    if (turnInFlightRef.current || battle?.status !== 'in_progress') return;
+    turnInFlightRef.current = true; setSubmitting(true);
     try {
-      const roundResult = await onTakeTurn([]);
+      const roundResult = await onTakeTurn(actions);
       appendNarration(roundResult);
-    } finally {
-      setSubmitting(false);
-    }
+      setSelectedMove(null); setSelectedTarget(null);
+    } finally { turnInFlightRef.current = false; setSubmitting(false); }
   };
-
+  const resolveEnemyPhase = () => sendTurn([]);
   const executeAutoTurn = async () => {
-    if (!currentActor) return;
-    await new Promise(resolve => setTimeout(resolve, 500));
+    if (!currentActor || battle?.status !== 'in_progress') return;
     const picked = chooseAutoMove(currentActor);
-    if (!picked) {
-      await handleSkipTurn();
-      return;
-    }
-    await handleTakeTurn(picked.move, picked.target);
+    if (!picked) return handleSkipTurn();
+    return handleTakeTurn(picked.move, picked.target);
   };
-
-  const handleSkipTurn = async () => {
-    if (!currentActor || submitting) return;
-    setSubmitting(true);
-    try {
-      const roundResult = await onTakeTurn([
-        {
-          roster_id: currentActor.id,
-          action_type: 'skip'
-        }
-      ]);
-      appendNarration(roundResult);
-      setSelectedMove(null);
-      setSelectedTarget(null);
-    } finally {
-      setSubmitting(false);
-    }
+  const handleSkipTurn = () => {
+    if (!currentActor) return;
+    return sendTurn([{ roster_id: currentActor.id, action_type: 'skip' }]);
   };
-
-  const handleTakeTurn = async (move, target) => {
-    if (!currentActor || !move || !target || submitting) return;
-    setSubmitting(true);
-    try {
-      const roundResult = await onTakeTurn([
-        {
-          roster_id: currentActor.id,
-          action_type: 'move',
-          move_id: move.move_id,
-          target_roster_ids: [target.id]
-        }
-      ]);
-      appendNarration(roundResult);
-      setSelectedMove(null);
-      setSelectedTarget(null);
-    } finally {
-      setSubmitting(false);
-    }
+  const handleTakeTurn = (move, target) => {
+    if (!currentActor || !move || !target) return;
+    return sendTurn([{ roster_id: currentActor.id, action_type: 'move', move_id: move.move_id, target_roster_ids: [target.id] }]);
   };
 
   return (

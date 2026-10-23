@@ -5,6 +5,13 @@ import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginUnusedImports from "eslint-plugin-unused-imports";
 
 export default [
+  { ignores: ['dist/**', 'output/**', 'node_modules/**'] },
+  {
+    files: ['server/**/*.js', 'scripts/*.mjs', 'tests/*.js', 'src/api/*.js'],
+    ...pluginJs.configs.recommended,
+    languageOptions: { globals: { ...globals.node, ...globals.browser }, ecmaVersion: 'latest', sourceType: 'module' },
+    rules: { 'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true }] },
+  },
   {
     files: [
       "src/components/**/*.{js,mjs,cjs,jsx}",

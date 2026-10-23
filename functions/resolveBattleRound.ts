@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from '../server/runtime.js';
 import {
   buildDeterministicInitiativeQueue,
   buildUserOwnerKeys,
@@ -332,9 +332,9 @@ function checkBattleEnd(allUnits: any[]): string | null {
   return null;
 }
 
-async function persistRosterState(base44: any, allUnits: any[]): Promise<void> {
+async function persistRosterState(pupil: any, allUnits: any[]): Promise<void> {
   for (const unit of allUnits) {
-    await base44.asServiceRole.entities.PupilRoster.update(unit.id, {
+    await pupil.service.entities.PupilRoster.update(unit.id, {
       combat_stats: unit.combat_stats,
       active_statuses: unit.active_statuses || [],
       moveset: unit.moveset,
@@ -352,10 +352,10 @@ function buildTeamState(allUnits: any[], team: 'team_a' | 'team_b'): any[] {
     });
 }
 
-Deno.serve(async (req) => {
+export default (async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const pupil = createClientFromRequest(req);
+    const user = await pupil.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -388,11 +388,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    const battleRows = await base44.asServiceRole.entities.Battle.filter({ id: battle_id });
+    const battleRows = await pupil.service.entities.Battle.filter({ id: battle_id });
     if (!battleRows || battleRows.length === 0) {
       return Response.json({ error: 'Battle not found' }, { status: 404 });
     }
     const battle = battleRows[0];
+
+    if (!Number.isInteger(payload.expected_round) || payload.expected_round !== battle.current_round) {
+      return Response.json({ error: 'This round has already changed. Reload to resume the current battle.' }, { status: 409 });
+    }
 
     if (battle.status !== 'in_progress') {
       return Response.json({ error: 'Battle is not in progress' }, { status: 400 });
@@ -409,7 +413,7 @@ Deno.serve(async (req) => {
     const allIds = [...(battle.team_a || []), ...(battle.team_b || [])].map((id: any) => String(id));
     const allUnits: any[] = [];
     for (const id of allIds) {
-      const unitRows = await base44.asServiceRole.entities.PupilRoster.filter({ id });
+      const unitRows = await pupil.service.entities.PupilRoster.filter({ id });
       if (unitRows && unitRows.length > 0) {
         const unit = unitRows[0];
         unit._team = (battle.team_a || []).map((x: any) => String(x)).includes(id) ? 'team_a' : 'team_b';
@@ -463,7 +467,7 @@ Deno.serve(async (req) => {
       turnResult.turn_index = turnIndex;
       turnResults.push(turnResult);
 
-      await base44.asServiceRole.entities.BattleTurn.create({
+      await pupil.service.entities.BattleTurn.create({
         battle_id,
         round_number: battle.current_round,
         turn_index: turnIndex,
@@ -474,8 +478,8 @@ Deno.serve(async (req) => {
 
       const winner = checkBattleEnd(allUnits);
       if (winner) {
-        await persistRosterState(base44, allUnits);
-        await base44.asServiceRole.entities.Battle.update(battle_id, {
+        await persistRosterState(pupil, allUnits);
+        await pupil.service.entities.Battle.update(battle_id, {
           status: 'completed',
           winner,
           current_round: battle.current_round,
@@ -504,8 +508,8 @@ Deno.serve(async (req) => {
     const maxRounds = Number(battle.max_rounds || 20);
 
     if (nextRound > maxRounds) {
-      await persistRosterState(base44, allUnits);
-      await base44.asServiceRole.entities.Battle.update(battle_id, {
+      await persistRosterState(pupil, allUnits);
+      await pupil.service.entities.Battle.update(battle_id, {
         status: 'completed',
         winner: 'draw',
         current_round: battle.current_round,
@@ -529,8 +533,8 @@ Deno.serve(async (req) => {
     const teamBUnits = allUnits.filter(u => u._team === 'team_b' && Number(u?.combat_stats?.hp || 0) > 0);
     const nextQueue = buildDeterministicInitiativeQueue(teamAUnits, teamBUnits, seed);
 
-    await persistRosterState(base44, allUnits);
-    await base44.asServiceRole.entities.Battle.update(battle_id, {
+    await persistRosterState(pupil, allUnits);
+    await pupil.service.entities.Battle.update(battle_id, {
       current_round: nextRound,
       initiative_queue: nextQueue,
       seed

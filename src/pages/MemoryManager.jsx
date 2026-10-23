@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { pupil } from '@/api/pupilClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
@@ -28,7 +28,7 @@ export default function MemoryManager() {
   }, []);
 
   const loadData = async () => {
-    const companions = await base44.entities.Companion.list();
+    const companions = await pupil.entities.Companion.list();
     if (companions.length === 0) {
       navigate(createPageUrl('Welcome'));
       return;
@@ -37,8 +37,8 @@ export default function MemoryManager() {
     setCompanion(comp);
 
     const [mems, rls] = await Promise.all([
-      base44.entities.CompanionMemory.filter({ companion_id: comp.id }),
-      base44.entities.BehaviorRule.filter({ companion_id: comp.id })
+      pupil.entities.CompanionMemory.filter({ companion_id: comp.id }),
+      pupil.entities.BehaviorRule.filter({ companion_id: comp.id })
     ]);
 
     setMemories(mems || []);
@@ -48,13 +48,13 @@ export default function MemoryManager() {
 
   // Memory CRUD
   const handleUpdateMemory = async (id, data) => {
-    await base44.entities.CompanionMemory.update(id, data);
+    await pupil.entities.CompanionMemory.update(id, data);
     setMemories(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
     toast.success('Memory updated');
   };
 
   const handleDeleteMemory = async (id) => {
-    await base44.entities.CompanionMemory.delete(id);
+    await pupil.entities.CompanionMemory.delete(id);
     setMemories(prev => prev.filter(m => m.id !== id));
     toast.success('Memory deleted');
   };
@@ -68,15 +68,13 @@ export default function MemoryManager() {
 
   const handleCreateMemory = async () => {
     if (!newMemory.key.trim() || !newMemory.value.trim()) return;
-    const created = await base44.entities.CompanionMemory.create({
+    const created = await pupil.entities.CompanionMemory.create({
       companion_id: companion.id,
       memory_key: newMemory.key,
       memory_value: newMemory.value,
       memory_type: newMemory.type,
       importance: newMemory.importance,
-      source: 'notepad',
-      tags: [],
-      is_encrypted: true
+      tags: []
     });
     setMemories(prev => [created, ...prev]);
     setNewMemory({ key: '', value: '', type: 'fact', importance: 50 });
@@ -86,24 +84,23 @@ export default function MemoryManager() {
 
   // Behavior Rule CRUD
   const handleCreateRule = async (ruleData) => {
-    const created = await base44.entities.BehaviorRule.create({
+    const created = await pupil.entities.BehaviorRule.create({
       companion_id: companion.id,
       ...ruleData,
-      is_active: true,
-      trigger_count: 0
+      is_active: true
     });
     setRules(prev => [created, ...prev]);
     toast.success('Behavior rule created');
   };
 
   const handleUpdateRule = async (id, data) => {
-    await base44.entities.BehaviorRule.update(id, data);
+    await pupil.entities.BehaviorRule.update(id, data);
     setRules(prev => prev.map(r => r.id === id ? { ...r, ...data } : r));
     toast.success('Rule updated');
   };
 
   const handleDeleteRule = async (id) => {
-    await base44.entities.BehaviorRule.delete(id);
+    await pupil.entities.BehaviorRule.delete(id);
     setRules(prev => prev.filter(r => r.id !== id));
     toast.success('Rule deleted');
   };
@@ -118,7 +115,7 @@ export default function MemoryManager() {
     })
     .sort((a, b) => {
       if (filter.sort === 'importance') return (b.importance || 0) - (a.importance || 0);
-      if (filter.sort === 'recent') return new Date(b.created_date || 0) - new Date(a.created_date || 0);
+      if (filter.sort === 'recent') return new Date(b.created_date || 0).getTime() - new Date(a.created_date || 0).getTime();
       if (filter.sort === 'recalled') return (b.recall_count || 0) - (a.recall_count || 0);
       return 0;
     });

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { pupil } from '@/api/pupilClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Sparkles, Lock, Crown, Zap, GitBranch } from 'lucide-react';
+import { ArrowLeft, Sparkles, Lock, Crown, Zap, GitBranch, Swords } from 'lucide-react';
 import DNAGrid from '@/components/puzzle/DNAGrid';
 import CompanionAvatar from '@/components/companion/CompanionAvatar';
 import EvolutionPathSelector from '@/components/evolution/EvolutionPathSelector';
@@ -27,10 +27,10 @@ export default function Evolution() {
   
   const loadData = async () => {
     const [companions, subs, puzzles, entitlementResponse] = await Promise.all([
-      base44.entities.Companion.list(),
-      base44.entities.Subscription.list(),
-      base44.entities.EvolutionPuzzle.list(),
-      base44.functions.invoke('getEntitlements', {})
+      pupil.entities.Companion.list(),
+      pupil.entities.Subscription.list(),
+      pupil.entities.EvolutionPuzzle.list(),
+      pupil.functions.invoke('getEntitlements', {})
     ]);
     
     if (companions.length === 0) {
@@ -48,7 +48,7 @@ export default function Evolution() {
   const handlePuzzleComplete = async (result) => {
     if (!companion) return;
 
-    const response = await base44.functions.invoke('submitEvolutionPuzzle', {
+    const response = await pupil.functions.invoke('submitEvolutionPuzzle', {
       companion_id: companion.id,
       difficulty,
       evolution_dna: result
@@ -59,17 +59,24 @@ export default function Evolution() {
     }
 
     const bonuses = response.data?.bonuses || {};
-    setCompanion(response.data?.companion || companion);
-    toast.success(`Evolution complete! +${bonuses.xp_gain || 0} XP earned!`);
+    let updated = response.data?.companion || companion;
+    const nextThreshold = { infant: 100, child: 500, teenager: 2000 }[updated.stage];
+    if (nextThreshold && updated.experience_points >= nextThreshold) {
+      const evolved = await pupil.functions.invoke('completeEvolution', { companion_id: companion.id, puzzle_id: response.data.puzzle.id });
+      if (evolved.data.error) toast.error(evolved.data.error);
+      else if (evolved.data.success) { updated = evolved.data.companion; toast.success(`${updated.name} evolved to ${updated.stage}!`); }
+    }
+    setCompanion(updated);
+    toast.success(`Puzzle complete! +${bonuses.xp_gain || 0} XP earned!`);
 
-    const puzzles = await base44.entities.EvolutionPuzzle.filter({ companion_id: companion.id });
+    const puzzles = await pupil.entities.EvolutionPuzzle.filter({ companion_id: companion.id });
     setCompletedPuzzles((puzzles || []).filter(p => p.completed));
   };
 
   const handleEvolutionPathSelect = async (pathData) => {
     if (!companion) return;
 
-    const response = await base44.functions.invoke('setEvolutionPath', {
+    const response = await pupil.functions.invoke('setEvolutionPath', {
       companion_id: companion.id,
       evolution_path: pathData.evolution_path,
       subtype: pathData.subtype
@@ -85,6 +92,7 @@ export default function Evolution() {
   };
 
   const canChooseEvolutionPath = companion?.stage === 'teenager' && !companion?.evolution_path;
+  const canEnterCombat = ['teenager', 'adult'].includes(String(companion?.stage || '').toLowerCase());
   
   const isLocked = !['premium', 'elite'].includes(subscription?.tier);
   
@@ -206,6 +214,17 @@ export default function Evolution() {
                 >
                   <GitBranch className="w-4 h-4 mr-1" />
                   Choose Evolution Path
+                </Button>
+              )}
+
+              {canEnterCombat && (
+                <Button
+                  onClick={() => navigate(createPageUrl('Battle'))}
+                  className="w-full mt-3 bg-slate-900 hover:bg-slate-800"
+                  size="sm"
+                >
+                  <Swords className="w-4 h-4 mr-1" />
+                  Enter Arena
                 </Button>
               )}
             </motion.div>

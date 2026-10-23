@@ -94,13 +94,13 @@ async function tryFilterMany(entityAccessor: AnyRecord, filters: AnyRecord[]): P
 }
 
 export async function getOwnedRecordById(
-  base44: AnyRecord,
+  pupil: AnyRecord,
   entityName: string,
   id: string,
   ownerKeys: string[]
 ): Promise<AnyRecord | null> {
-  const serviceAccessor = base44?.asServiceRole?.entities?.[entityName];
-  const userAccessor = base44?.entities?.[entityName];
+  const serviceAccessor = pupil?.service?.entities?.[entityName];
+  const userAccessor = pupil?.entities?.[entityName];
 
   if (serviceAccessor?.filter) {
     try {
@@ -134,12 +134,12 @@ export async function getOwnedRecordById(
 }
 
 export async function listOwnedRecords(
-  base44: AnyRecord,
+  pupil: AnyRecord,
   entityName: string,
   ownerKeys: string[]
 ): Promise<AnyRecord[]> {
-  const serviceAccessor = base44?.asServiceRole?.entities?.[entityName];
-  const userAccessor = base44?.entities?.[entityName];
+  const serviceAccessor = pupil?.service?.entities?.[entityName];
+  const userAccessor = pupil?.entities?.[entityName];
   const ownerFilters = ownerKeys.flatMap(ownerKey =>
     SCHEMA_ASSUMPTIONS.ownerFields.map(field => ({ [field]: ownerKey }))
   );
@@ -170,9 +170,9 @@ export async function listOwnedRecords(
   return [];
 }
 
-export async function getUserCurrencyRecord(base44: AnyRecord, ownerKeys: string[]): Promise<AnyRecord | null> {
-  const serviceAccessor = base44?.asServiceRole?.entities?.UserCurrency;
-  const userAccessor = base44?.entities?.UserCurrency;
+export async function getUserCurrencyRecord(pupil: AnyRecord, ownerKeys: string[]): Promise<AnyRecord | null> {
+  const serviceAccessor = pupil?.service?.entities?.UserCurrency;
+  const userAccessor = pupil?.entities?.UserCurrency;
   const ownerFilters = ownerKeys.flatMap(ownerKey =>
     SCHEMA_ASSUMPTIONS.ownerFields.map(field => ({ [field]: ownerKey }))
   );
@@ -221,9 +221,9 @@ export function isPaidTier(tier: any): boolean {
   return TIER_CONFIG[normalizeTier(tier)]?.isPaid || SCHEMA_ASSUMPTIONS.paidTiers.includes(String(tier || '').toLowerCase());
 }
 
-async function listSubscriptionRows(base44: AnyRecord, ownerKeys: string[]): Promise<AnyRecord[]> {
-  const serviceAccessor = base44?.asServiceRole?.entities?.Subscription;
-  const userAccessor = base44?.entities?.Subscription;
+async function listSubscriptionRows(pupil: AnyRecord, ownerKeys: string[]): Promise<AnyRecord[]> {
+  const serviceAccessor = pupil?.service?.entities?.Subscription;
+  const userAccessor = pupil?.entities?.Subscription;
   const ownerFilters = ownerKeys.flatMap(ownerKey =>
     SCHEMA_ASSUMPTIONS.ownerFields.map(field => ({ [field]: ownerKey }))
   );
@@ -246,8 +246,8 @@ async function listSubscriptionRows(base44: AnyRecord, ownerKeys: string[]): Pro
   return rows;
 }
 
-export async function resolveUserEntitlements(base44: AnyRecord, ownerKeys: string[]): Promise<AnyRecord> {
-  const rows = await listSubscriptionRows(base44, ownerKeys);
+export async function resolveUserEntitlements(pupil: AnyRecord, ownerKeys: string[]): Promise<AnyRecord> {
+  const rows = await listSubscriptionRows(pupil, ownerKeys);
   const ranked = [...rows].sort((a, b) => {
     const aActive = a?.is_active === false ? 0 : 1;
     const bActive = b?.is_active === false ? 0 : 1;
@@ -273,8 +273,8 @@ export async function resolveUserEntitlements(base44: AnyRecord, ownerKeys: stri
   };
 }
 
-export async function getUserSubscriptionTier(base44: AnyRecord, ownerKeys: string[]): Promise<string> {
-  const entitlements = await resolveUserEntitlements(base44, ownerKeys);
+export async function getUserSubscriptionTier(pupil: AnyRecord, ownerKeys: string[]): Promise<string> {
+  const entitlements = await resolveUserEntitlements(pupil, ownerKeys);
   return entitlements.tier;
 }
 
@@ -642,4 +642,205 @@ export function estimateJsonBytes(value: unknown): number {
 
 export function clampStat(value: number, min = 0, max = 100): number {
   return Math.max(min, Math.min(max, value));
+}
+
+export function hasTeenageCombatAccess(stage: any): boolean {
+  return ['teenager', 'adult'].includes(String(stage || '').trim().toLowerCase());
+}
+
+function deriveRosterElement(companion: AnyRecord): string {
+  const bySpecies: Record<string, string> = {
+    celestial: 'lumen',
+    aquatic: 'tide',
+    forest: 'vine',
+    crystal: 'stone',
+    shadow: 'umber'
+  };
+  const byPath: Record<string, string> = {
+    Guardian: 'stone',
+    Predator: 'heat',
+    Mystic: 'volt',
+    Scholar: 'lumen',
+    Trickster: 'umber',
+    Adaptive: bySpecies[String(companion?.species || '').toLowerCase()] || 'gale'
+  };
+  return byPath[String(companion?.evolution_path || '')] || bySpecies[String(companion?.species || '').toLowerCase()] || 'gale';
+}
+
+function deriveRosterAlignment(companion: AnyRecord): string {
+  const byPath: Record<string, string> = {
+    Guardian: 'guardian',
+    Predator: 'rogue',
+    Mystic: 'cipher',
+    Scholar: 'cipher',
+    Trickster: 'rogue',
+    Adaptive: 'cipher'
+  };
+  const byArchetype: Record<string, string> = {
+    Berserker: 'rogue',
+    Guardian: 'guardian',
+    Oracle: 'cipher',
+    Trickster: 'rogue',
+    Caretaker: 'guardian',
+    Duelist: 'rogue',
+    Vanguard: 'guardian',
+    Adaptive: 'cipher'
+  };
+  return byPath[String(companion?.evolution_path || '')] || byArchetype[String(companion?.build_archetype || '')] || 'cipher';
+}
+
+function deriveRosterFamily(companion: AnyRecord): string {
+  const bySpecies: Record<string, string> = {
+    celestial: 'celestials',
+    aquatic: 'elementals',
+    forest: 'beasts',
+    crystal: 'golems',
+    shadow: 'undead'
+  };
+  return bySpecies[String(companion?.species || '').toLowerCase()] || 'elementals';
+}
+
+function buildTeenageCombatStats(companion: AnyRecord): AnyRecord {
+  const level = Math.max(1, Number(companion?.level || 1));
+  const knowledge = Number(companion?.knowledge_level || 0);
+  const fitness = Number(companion?.fitness || 0);
+  const trust = Number(companion?.trust_level || 0);
+  const energy = Number(companion?.personality_energy || 0);
+  const curiosity = Number(companion?.personality_curiosity || 0);
+  const empathy = Number(companion?.personality_empathy || 0);
+  const affinity = normalizeAffinity(companion?.trait_affinity);
+  const isAdult = String(companion?.stage || '').toLowerCase() === 'adult';
+  const stageBonus = isAdult ? 10 : 0;
+
+  const maxHp = 95 + stageBonus + Math.round(fitness * 0.55) + Math.round(trust * 0.2) + level * 3;
+
+  return {
+    hp: maxHp,
+    max_hp: maxHp,
+    guard: 8 + stageBonus + Math.round((fitness + affinity.nurturing + affinity.disciplined) / 14),
+    power: 9 + stageBonus + Math.round((fitness + energy + affinity.aggressive) / 14),
+    speed: 8 + Math.round((energy + curiosity + affinity.chaotic) / 16),
+    focus: 8 + Math.round((knowledge + curiosity + affinity.disciplined) / 14),
+    will: 8 + Math.round((trust + empathy + affinity.nurturing) / 14)
+  };
+}
+
+function buildTeenageMoveset(companion: AnyRecord, element: string, alignment: string): AnyRecord[] {
+  const strikeName = alignment === 'guardian' ? 'Resolve Strike' : alignment === 'rogue' ? 'Instinct Cut' : 'Focus Bolt';
+  const skillName = companion?.signature_ability ? 'Signature Surge' : 'Learning Burst';
+  const utilityName = alignment === 'guardian' ? 'Guard Stance' : alignment === 'rogue' ? 'Quick Feint' : 'Pattern Read';
+
+  return [
+    {
+      move_id: 'pupil_strike',
+      move_name: strikeName,
+      move_type: 'strike',
+      taxonomy: 'smash',
+      element,
+      power: 18,
+      accuracy: 92,
+      cooldown: 0,
+      current_cooldown: 0
+    },
+    {
+      move_id: 'pupil_skill',
+      move_name: skillName,
+      move_type: 'skill',
+      taxonomy: alignment === 'rogue' ? 'trick' : 'blast',
+      element,
+      power: 26,
+      accuracy: 84,
+      cooldown: 2,
+      current_cooldown: 0
+    },
+    {
+      move_id: 'pupil_guard',
+      move_name: utilityName,
+      move_type: 'utility',
+      taxonomy: 'guard',
+      element: 'neutral',
+      power: 0,
+      accuracy: 100,
+      cooldown: 2,
+      current_cooldown: 0
+    }
+  ];
+}
+
+export async function ensureCompanionCombatRosterUnit(
+  pupil: AnyRecord,
+  companion: AnyRecord | null | undefined,
+  options: { refreshExisting?: boolean } = {}
+): Promise<AnyRecord | null> {
+  if (!pupil || !companion?.id || !hasTeenageCombatAccess(companion?.stage)) {
+    return null;
+  }
+
+  const rosterAccessor = pupil.service?.entities?.PupilRoster;
+  let existingRows: AnyRecord[] = [];
+  if (rosterAccessor?.filter) {
+    try {
+      const rows = await rosterAccessor.filter({ companion_id: companion.id });
+      existingRows = Array.isArray(rows) ? rows : [];
+    } catch {
+      existingRows = [];
+    }
+  }
+  const existing = Array.isArray(existingRows)
+    ? existingRows.find((unit: AnyRecord) => !unit?.is_temporary_ai && unit?.companion_id !== 'system')
+    : null;
+
+  if (existing && !options.refreshExisting) {
+    return existing;
+  }
+
+  const element = deriveRosterElement(companion);
+  const alignment = deriveRosterAlignment(companion);
+  const combatStats = buildTeenageCombatStats(companion);
+  const patch = {
+    companion_id: companion.id,
+    creature_template: `teen_${String(companion.species || 'pupil').toLowerCase()}_${alignment}`,
+    creature_name: `${companion.name || 'Perfect Pupil'} Battle Form`,
+    chassis_family: deriveRosterFamily(companion),
+    alignment,
+    element,
+    evolution_stage: String(companion.stage || 'teenager').toLowerCase(),
+    role: alignment === 'guardian' ? 'tank' : alignment === 'rogue' ? 'striker' : 'tactician',
+    combat_stats: combatStats,
+    moveset: buildTeenageMoveset(companion, element, alignment),
+    signature_passive: companion.signature_passive || null,
+    signature_ability: companion.signature_ability || null,
+    auto_battle_enabled: false,
+    tactics_profile: alignment === 'rogue' ? 'aggressive' : 'balanced',
+    active_statuses: [],
+    is_fainted: false
+  };
+
+  if (existing) {
+    const preservedStats = existing.combat_stats || {};
+    const maxHpChanged = Number(preservedStats.max_hp || 0) !== Number(combatStats.max_hp || 0);
+    const nextStats = {
+      ...combatStats,
+      hp: maxHpChanged ? combatStats.max_hp : Math.max(1, Number(preservedStats.hp || combatStats.max_hp))
+    };
+    await pupil.service.entities.PupilRoster.update(existing.id, {
+      ...patch,
+      combat_stats: nextStats,
+      total_xp: existing.total_xp || 0,
+      total_battles: existing.total_battles || 0,
+      wins: existing.wins || 0,
+      losses: existing.losses || 0,
+      draws: existing.draws || 0
+    });
+    return { ...existing, ...patch, combat_stats: nextStats };
+  }
+
+  return await pupil.entities.PupilRoster.create({
+    ...patch,
+    total_xp: 0,
+    total_battles: 0,
+    wins: 0,
+    losses: 0,
+    draws: 0
+  });
 }

@@ -112,9 +112,9 @@ export default function MemoryCard({ memory, onUpdate, onDelete, onAddTag }) {
                 placeholder="Type a tag..."
                 className="flex-1 text-sm px-3 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-300"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && e.target.value.trim()) {
-                    onAddTag(memory.id, e.target.value.trim());
-                    e.target.value = '';
+                  if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                    onAddTag(memory.id, e.currentTarget.value.trim());
+                    e.currentTarget.value = '';
                   }
                 }}
               />

@@ -1,70 +1,30 @@
-# Perfect Pupil Release Checklist
+# Local edition release checklist
 
-This checklist is for release preparation only. It does not auto-publish builds.
+- Run Node 24.14+ and `npm ci` on a clean Windows checkout.
+- Run `npm run check:release` (lint, type checking, integration tests, offline
+  harness evaluation, production build).
+- Run `npm run test:browser`, which starts a fresh isolated production service;
+  inspect the screenshots and verify no console errors. For development proxy
+  verification, run the dev server with an isolated data directory and set
+  `PUPIL_TEST_URL=http://127.0.0.1:5173`.
+- Test create → care → chat → refresh/restart → memory → battle → rewards.
+- Verify an in-progress battle resumes and duplicate round requests are rejected.
+- Test encrypted brain export/import, including an incorrect passphrase.
+- Test the intended real local model, not just a fixture, with live evaluation.
+  Record model ID/revision, context settings, RAM/VRAM and latency measurements.
+- Test any intended cloud service separately with explicit consent, JSON output,
+  cancellation, bad credentials, provider errors and disabled fallback.
+- Verify Windows DPAPI credential persistence after restart and re-entry on
+  another Windows account. Protect plaintext local databases and training exports.
+- Review dependency advisories. The inherited Tailwind 3 development chain and
+  React Router 6 still have advisories requiring separate major-version migration;
+  do not run forced dependency upgrades without regression checks.
+- Before distribution: add a Windows installer/runtime distribution strategy,
+  app signing, update/recovery behavior and a tested backup/restore procedure.
+- Before publishing a multi-user service: implement real authentication,
+  per-user isolation, operational controls and real billing if required. The
+  loopback single-user backend is not a public hosting service.
 
-## Web Launch Checklist
-
-- [ ] Copy `.env.example` to `.env.local` (or CI env) and set:
-  - `VITE_BASE44_APP_ID`
-  - `VITE_BASE44_APP_BASE_URL`
-  - `VITE_BASE44_FUNCTIONS_VERSION` (optional)
-- [ ] Run `npm run lint`
-- [ ] Run `npm run build`
-- [ ] Smoke test `dist` with `npm run preview`
-- [ ] Confirm app routing rewrite is configured on host (SPA fallback to `index.html`)
-- [ ] Confirm `public/manifest.webmanifest` values match production brand/domain
-- [ ] Verify icons exist and load:
-  - `public/icons/icon-192.png`
-  - `public/icons/icon-512.png`
-  - `public/icons/apple-touch-icon.png`
-  - `public/icons/favicon.svg`
-- [ ] Verify service worker registration in production (`src/main.jsx`)
-- [ ] Verify offline fallback page renders when network is disabled (`public/offline.html`)
-
-## Windows Store (PWA) Checklist
-
-- [ ] Validate installability in Edge (manifest + service worker + HTTPS)
-- [ ] Confirm app installs with correct name, icon, and standalone window behavior
-- [ ] Confirm offline fallback UX for navigation failures
-- [ ] Use PWABuilder (or equivalent) to generate MSIX package from production URL
-- [ ] Validate package identity/publisher settings for Store submission
-- [ ] Run Windows App Certification Kit on generated package
-- [ ] Verify deep-link behavior after install (SPA route fallback still required server-side)
-
-## Mobile Wrapper (Capacitor) Checklist
-
-- [ ] Use `capacitor.config.example.json` as a template for future `capacitor.config.*`
-- [ ] Keep `webDir` as `dist` and build web first (`npm run build`)
-- [ ] Add platform projects only after legal/privacy/payment policy is finalized
-- [ ] Validate assumptions that may break in wrappers:
-  - Browser-only auth redirect and URL-param flows (`window.location`, query params)
-  - Browser download/upload UX for brain export/import (file picker + blob download)
-  - BrowserRouter deep links and back-stack behavior
-  - Service worker behavior (not relied on in native webviews)
-- [ ] Decide whether auth is in-app webview only or external browser handoff
-- [ ] Define secure storage strategy for tokens before mobile release
-
-## Privacy / Policy Checklist
-
-- [ ] Publish privacy policy and terms URLs referenced in-app/store metadata
-- [ ] Document brain export/import data handling, encryption model, and retention
-- [ ] Verify no plaintext secret keys or provider credentials are exposed client-side
-- [ ] Confirm user data deletion/account deletion support path
-- [ ] Verify telemetry/error logging does not include sensitive companion brain payloads
-
-## Payments / Subscription Warnings
-
-- [ ] Do not rely on client-only gating for paid features
-- [ ] Keep server-side entitlement enforcement as source of truth for:
-  - Companion roster limits
-  - Premium evolution/customization gates
-  - Brain export/import access
-- [ ] Replace any placeholder tier switching UX with real billing provider/webhook flow before store launch
-- [ ] Validate upgrade messaging and blocked-action errors are user-friendly
-
-## Current Known Blockers / Follow-Ups
-
-- `npm run build` passes, but `npm run typecheck` currently fails across many JSX files due pre-existing typing/config issues.
-- Subscription tier changes currently include a direct tier-setting flow in UI; production billing integration and anti-tamper policy must be finalized before store submission.
-- SPA host rewrite to `index.html` is required for deep links (`/Home`, `/Battle`, etc.) in web and installed PWA contexts.
-
+Training is optional. Do not claim distilled-model quality, retraining capacity,
+on-device performance, or privacy properties that have not been measured or
+implemented. The app ships without model weights and never trains automatically.

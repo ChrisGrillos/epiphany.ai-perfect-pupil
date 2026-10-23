@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'perfect-pupil-v1';
+const CACHE_VERSION = 'perfect-pupil-local-v2';
 const OFFLINE_URL = '/offline.html';
 const CACHEABLE_DESTINATIONS = new Set(['script', 'style', 'image', 'font']);
 const CACHEABLE_EXTENSIONS = [
@@ -53,6 +53,7 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   const isSameOrigin = url.origin === self.location.origin;
+  if (url.pathname.startsWith('/api/')) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(

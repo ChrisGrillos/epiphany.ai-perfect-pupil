@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from '../server/runtime.js';
 import {
   buildUserOwnerKeys,
   encryptJsonPayload,
@@ -33,16 +33,16 @@ function safeArray<T>(value: T[], maxLength: number): T[] {
   return Array.isArray(value) ? value.slice(0, maxLength) : [];
 }
 
-async function exportChatSessions(base44: any, companionId: string): Promise<any[]> {
+async function exportChatSessions(pupil: any, companionId: string): Promise<any[]> {
   const sessions = safeArray(
-    await base44.asServiceRole.entities.ChatSession.filter({ companion_id: companionId }),
+    await pupil.service.entities.ChatSession.filter({ companion_id: companionId }),
     EXPORT_LIMITS.maxChatSessions
   );
 
   const out = [];
   for (const session of sessions) {
     const messages = safeArray(
-      await base44.asServiceRole.entities.ChatMessage.filter({ session_id: session.id }),
+      await pupil.service.entities.ChatMessage.filter({ session_id: session.id }),
       EXPORT_LIMITS.maxChatMessagesPerSession
     ).map((m: any) => ({
       role: safeString(m.role, 20),
@@ -67,10 +67,10 @@ async function exportChatSessions(base44: any, companionId: string): Promise<any
   return out;
 }
 
-Deno.serve(async (req) => {
+export default (async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const pupil = createClientFromRequest(req);
+    const user = await pupil.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
     }
 
     const ownerKeys = buildUserOwnerKeys(user);
-    const entitlements = await resolveUserEntitlements(base44, ownerKeys);
+    const entitlements = await resolveUserEntitlements(pupil, ownerKeys);
     if (!entitlements.is_paid) {
       return Response.json(
         { error: `Brain export requires a paid subscription (Basic or above). Your current tier is ${entitlements.tier}.` },
@@ -92,17 +92,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    const companion = await getOwnedRecordById(base44, 'Companion', String(companion_id), ownerKeys);
+    const companion = await getOwnedRecordById(pupil, 'Companion', String(companion_id), ownerKeys);
     if (!companion) {
       return Response.json({ error: 'Companion not found or not owned by caller' }, { status: 404 });
     }
 
     const [rawMemories, rawRules, rawEvolutionAttempts, rawAlgorithmStates, chatSessions] = await Promise.all([
-      base44.asServiceRole.entities.CompanionMemory.filter({ companion_id }),
-      base44.asServiceRole.entities.BehaviorRule.filter({ companion_id }),
-      base44.asServiceRole.entities.EvolutionAttempt.filter({ companion_id }),
-      base44.asServiceRole.entities.AlgorithmState.filter({ companion_id }),
-      exportChatSessions(base44, String(companion_id))
+      pupil.service.entities.CompanionMemory.filter({ companion_id }),
+      pupil.service.entities.BehaviorRule.filter({ companion_id }),
+      pupil.service.entities.EvolutionAttempt.filter({ companion_id }),
+      pupil.service.entities.AlgorithmState.filter({ companion_id }),
+      exportChatSessions(pupil, String(companion_id))
     ]);
 
     const memories = safeArray(rawMemories, EXPORT_LIMITS.maxMemories).map((m: any) => ({

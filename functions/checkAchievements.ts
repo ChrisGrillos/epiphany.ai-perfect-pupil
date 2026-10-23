@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from '../server/runtime.js';
 import { buildUserOwnerKeys, getOwnedRecordById } from './_serverUtils.ts';
 
 /**
@@ -69,10 +69,10 @@ const XP_REWARDS = {
   first_memory: 15, memories_20: 75, first_rule: 20
 };
 
-Deno.serve(async (req) => {
+export default (async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const pupil = createClientFromRequest(req);
+    const user = await pupil.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -83,18 +83,18 @@ Deno.serve(async (req) => {
     }
 
     const ownerKeys = buildUserOwnerKeys(user);
-    const companion = await getOwnedRecordById(base44, 'Companion', String(companion_id), ownerKeys);
+    const companion = await getOwnedRecordById(pupil, 'Companion', String(companion_id), ownerKeys);
     if (!companion) {
       return Response.json({ error: 'Companion not found or not owned by caller' }, { status: 404 });
     }
 
     // Keep this scoped to the current companion so one pet's unlocks do not block others.
     const [existingAchievementsScoped, logs, memories, rules, legacyAchievements] = await Promise.all([
-      base44.asServiceRole.entities.Achievement.filter({ companion_id }),
-      base44.asServiceRole.entities.InteractionLog.filter({ companion_id }),
-      base44.asServiceRole.entities.CompanionMemory.filter({ companion_id }),
-      base44.asServiceRole.entities.BehaviorRule.filter({ companion_id }),
-      base44.entities.Achievement.filter({}).catch(() => []) // fallback for older rows missing companion_id
+      pupil.service.entities.Achievement.filter({ companion_id }),
+      pupil.service.entities.InteractionLog.filter({ companion_id }),
+      pupil.service.entities.CompanionMemory.filter({ companion_id }),
+      pupil.service.entities.BehaviorRule.filter({ companion_id }),
+      pupil.entities.Achievement.filter({}).catch(() => []) // fallback for older rows missing companion_id
     ]);
 
     const existingKeys = new Set([
@@ -124,7 +124,7 @@ Deno.serve(async (req) => {
 
       if (passed) {
         const xpReward = XP_REWARDS[achCheck.key] || 10;
-        await base44.asServiceRole.entities.Achievement.create({
+        await pupil.service.entities.Achievement.create({
           companion_id,
           achievement_key: achCheck.key,
           name: achCheck.key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
     }
 
     if (awardedXpTotal > 0) {
-      await base44.asServiceRole.entities.Companion.update(companion_id, {
+      await pupil.service.entities.Companion.update(companion_id, {
         experience_points: (companion.experience_points || 0) + awardedXpTotal
       });
     }

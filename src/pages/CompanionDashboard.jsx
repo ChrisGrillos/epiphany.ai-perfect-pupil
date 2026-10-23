@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { pupil } from '@/api/pupilClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ export default function CompanionDashboard() {
   }, []);
 
   const loadData = async () => {
-    const companions = await base44.entities.Companion.list();
+    const companions = await pupil.entities.Companion.list();
     if (companions.length === 0) {
       navigate(createPageUrl('Welcome'));
       return;
@@ -34,9 +34,9 @@ export default function CompanionDashboard() {
     setCompanion(comp);
 
     const [interactionLogs, rosterUnits, achs] = await Promise.all([
-      base44.entities.InteractionLog.filter({ companion_id: comp.id }, '-created_date', 50),
-      base44.entities.PupilRoster.filter({ companion_id: comp.id }),
-      base44.entities.Achievement.list()
+      pupil.entities.InteractionLog.filter({ companion_id: comp.id }, '-created_date', 50),
+      pupil.entities.PupilRoster.filter({ companion_id: comp.id }),
+      pupil.entities.Achievement.list()
     ]);
 
     setLogs(interactionLogs || []);

@@ -38,10 +38,10 @@ const STAGES = [
     color: 'from-cyan-400 to-teal-500',
     description: 'Ready for advanced learning',
     details: [
-      'High school knowledge',
+      'Teenage voice and character',
       'Formed personality',
-      'Direct profession learning',
-      'Internet-sourced education'
+      'Ready for training battles',
+      'Knowledge depends on the connected model'
     ],
     difficulty: 'Focused on growth'
   }

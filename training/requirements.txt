@@ -1,0 +1,8 @@
+# Optional training environment only. Install a hardware-compatible PyTorch CUDA
+# build separately, then install these dependencies in a dedicated virtual env.
+transformers>=4.46,<5
+peft>=0.14,<1
+datasets>=3,<5
+accelerate>=1,<2
+safetensors>=0.5,<1
+# For --four-bit only: install a bitsandbytes build compatible with your CUDA/OS.

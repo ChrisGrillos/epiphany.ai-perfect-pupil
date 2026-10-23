@@ -1,7 +1,8 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from '../server/runtime.js';
 import {
   buildUserOwnerKeys,
   clampStat,
+  ensureCompanionCombatRosterUnit,
   isTierAtLeast,
   resolveUserEntitlements,
   recomputeCompanionIdentity,
@@ -36,10 +37,10 @@ const PCP_REWARDS = {
   adult: 50
 };
 
-Deno.serve(async (req) => {
+export default (async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const pupil = createClientFromRequest(req);
+    const user = await pupil.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -51,7 +52,7 @@ Deno.serve(async (req) => {
     }
 
     const ownerKeys = buildUserOwnerKeys(user);
-    const entitlements = await resolveUserEntitlements(base44, ownerKeys);
+    const entitlements = await resolveUserEntitlements(pupil, ownerKeys);
     if (!isTierAtLeast(entitlements.tier, 'premium')) {
       return Response.json(
         { error: `Guided evolution requires Premium or Elite. Your current tier is ${entitlements.tier}.` },
@@ -59,7 +60,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const companion = await getOwnedRecordById(base44, 'Companion', String(companion_id), ownerKeys);
+    const companion = await getOwnedRecordById(pupil, 'Companion', String(companion_id), ownerKeys);
     if (!companion) {
       return Response.json({ error: 'Companion not found or not owned by caller' }, { status: 404 });
     }
@@ -76,7 +77,7 @@ Deno.serve(async (req) => {
     // Check XP requirement
     if ((companion.experience_points || 0) < requiredXP) {
       // Log failed attempt
-      await base44.asServiceRole.entities.EvolutionAttempt.create({
+      await pupil.service.entities.EvolutionAttempt.create({
         companion_id,
         puzzle_id: puzzle_id || null,
         from_stage: companion.stage,
@@ -97,7 +98,7 @@ Deno.serve(async (req) => {
 
     // Check puzzle completion if provided
     if (puzzle_id) {
-      const puzzles = await base44.asServiceRole.entities.EvolutionPuzzle.filter({ id: puzzle_id });
+      const puzzles = await pupil.service.entities.EvolutionPuzzle.filter({ id: puzzle_id });
       if (puzzles && puzzles.length > 0 && !puzzles[0].completed) {
         return Response.json({
           success: false,
@@ -153,21 +154,26 @@ Deno.serve(async (req) => {
     const pcpReward = PCP_REWARDS[nextStage] || 0;
 
     // Update companion
-    await base44.asServiceRole.entities.Companion.update(companion_id, statChanges);
+    await pupil.service.entities.Companion.update(companion_id, statChanges);
 
     // Award PcP
     if (pcpReward > 0) {
-      const currency = await getUserCurrencyRecord(base44, ownerKeys);
+      const currency = await getUserCurrencyRecord(pupil, ownerKeys);
       if (currency) {
-        await base44.asServiceRole.entities.UserCurrency.update(currency.id, {
+        await pupil.service.entities.UserCurrency.update(currency.id, {
           pcp_balance: (currency.pcp_balance || 0) + pcpReward,
           pcp_earned: (currency.pcp_earned || 0) + pcpReward
         });
       }
     }
 
+    const evolvedCompanion = { ...companion, ...statChanges };
+    const combatRosterUnit = await ensureCompanionCombatRosterUnit(pupil, evolvedCompanion, {
+      refreshExisting: nextStage === 'adult'
+    });
+
     // Log successful attempt
-    await base44.asServiceRole.entities.EvolutionAttempt.create({
+    await pupil.service.entities.EvolutionAttempt.create({
       companion_id,
       puzzle_id: puzzle_id || null,
       from_stage: companion.stage,
@@ -179,7 +185,7 @@ Deno.serve(async (req) => {
     });
 
     // Log interaction
-    await base44.asServiceRole.entities.InteractionLog.create({
+    await pupil.service.entities.InteractionLog.create({
       companion_id,
       action_type: 'puzzle',
       details: { from_stage: companion.stage, to_stage: nextStage },
@@ -196,7 +202,8 @@ Deno.serve(async (req) => {
       to_stage: nextStage,
       stat_changes: statChanges,
       pcp_reward: pcpReward,
-      companion: { ...companion, ...statChanges }
+      companion: evolvedCompanion,
+      combat_roster_unit: combatRosterUnit
     });
 
   } catch (error) {

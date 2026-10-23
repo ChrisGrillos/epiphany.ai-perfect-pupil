@@ -1,21 +1,21 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from '../server/runtime.js';
 import {
   buildUserOwnerKeys,
   listOwnedRecords,
   resolveUserEntitlements
 } from './_serverUtils.ts';
 
-Deno.serve(async (req) => {
+export default (async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const pupil = createClientFromRequest(req);
+    const user = await pupil.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const ownerKeys = buildUserOwnerKeys(user);
-    const entitlements = await resolveUserEntitlements(base44, ownerKeys);
-    const companions = await listOwnedRecords(base44, 'Companion', ownerKeys);
+    const entitlements = await resolveUserEntitlements(pupil, ownerKeys);
+    const companions = await listOwnedRecords(pupil, 'Companion', ownerKeys);
 
     return Response.json({
       tier: entitlements.tier,

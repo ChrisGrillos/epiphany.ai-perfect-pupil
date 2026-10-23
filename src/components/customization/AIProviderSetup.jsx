@@ -1,365 +1,58 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { Cpu, Cloud, Server, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Cpu, 
-  Key, 
-  Check, 
-  Shield,
-  Zap,
-  Cloud,
-  Server,
-  Lock
-} from 'lucide-react';
+import { pupil } from '@/api/pupilClient';
 import { toast } from 'sonner';
 
-const AI_PROVIDERS = [
-  {
-    id: 'default',
-    name: 'Default (Built-in)',
-    icon: Cpu,
-    description: 'Secure, privacy-first AI provided by Perfect Pupil',
-    requiresKey: false,
-    tier: 'free'
-  },
-  {
-    id: 'openai',
-    name: 'OpenAI',
-    icon: Cloud,
-    description: 'GPT-4, GPT-3.5 and other OpenAI models',
-    requiresKey: true,
-    tier: 'premium',
-    models: ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo']
-  },
-  {
-    id: 'anthropic',
-    name: 'Anthropic',
-    icon: Shield,
-    description: 'Claude 3 family of models',
-    requiresKey: true,
-    tier: 'premium',
-    models: ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku']
-  },
-  {
-    id: 'grok',
-    name: 'Grok (xAI)',
-    icon: Zap,
-    description: 'Grok AI from xAI',
-    requiresKey: true,
-    tier: 'elite',
-    models: ['grok-1', 'grok-2']
-  },
-  {
-    id: 'custom',
-    name: 'Custom Endpoint',
-    icon: Server,
-    description: 'Connect your own LLM API',
-    requiresKey: true,
-    tier: 'elite'
-  }
+const PROVIDERS = [
+  { id: 'builtin', name: 'Basic companion', icon: Cpu, description: 'Scripted replies. No model, download, or network connection.' },
+  { id: 'local', name: 'Local model', icon: Server, description: 'Connect llama.cpp, LM Studio, or another compatible server on this PC.' },
+  { id: 'cloud', name: 'Cloud model', icon: Cloud, description: 'Use an HTTPS service with a compatible chat completions API.' },
 ];
 
-const TIER_CALL_LIMITS = {
-  free: 100,
-  basic: 500,
-  premium: 2000,
-  elite: 10000
-};
-
-export default function AIProviderSetup({ 
-  currentConfig, 
-  subscription,
-  onSave,
-  monthlyUsage = 0
-}) {
-  const [provider, setProvider] = useState(currentConfig?.provider_name || 'default');
-  const [apiKey, setApiKey] = useState('');
-  const [apiEndpoint, setApiEndpoint] = useState(currentConfig?.api_endpoint || '');
-  const [selectedModel, setSelectedModel] = useState(currentConfig?.model_name || '');
-  const [fallbackEnabled, setFallbackEnabled] = useState(currentConfig?.fallback_to_default ?? true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [showKey, setShowKey] = useState(false);
-  
-  const tier = subscription?.tier || 'free';
-  const callLimit = TIER_CALL_LIMITS[tier];
-  const selectedProvider = AI_PROVIDERS.find(p => p.id === provider);
-  
-  const canUseProvider = (providerTier) => {
-    const tierOrder = ['free', 'basic', 'premium', 'elite'];
-    return tierOrder.indexOf(tier) >= tierOrder.indexOf(providerTier);
-  };
-  
-  const handleSave = async () => {
-    if (!canUseProvider(selectedProvider?.tier)) {
-      toast.error(`${selectedProvider.name} requires ${selectedProvider.tier} tier`);
-      return;
-    }
-    
-    if (selectedProvider?.requiresKey && !apiKey && provider !== currentConfig?.provider_name) {
-      toast.error('Please enter an API key');
-      return;
-    }
-    
-    setIsSaving(true);
-    
+export default function AIProviderSetup({ currentConfig, onSave }) {
+  const [form, setForm] = useState({ provider_name: currentConfig?.provider_name || 'builtin', api_endpoint: currentConfig?.api_endpoint || 'http://127.0.0.1:8080/v1', model_name: currentConfig?.model_name || '', api_key: '', allow_cloud: currentConfig?.allow_cloud || false, fallback_to_default: currentConfig?.fallback_to_default ?? true, context_chars: currentConfig?.context_chars || 12000, max_output_tokens: currentConfig?.max_output_tokens || 512, temperature: currentConfig?.temperature ?? 0.3, structured_output: currentConfig?.structured_output || 'json_object', clear_api_key: false });
+  const [busy, setBusy] = useState(false);
+  const update = patch => setForm(value => ({ ...value, ...patch }));
+  async function save(event) {
+    event.preventDefault(); setBusy(true);
+    try { await onSave(form); update({ api_key: '', clear_api_key: false }); toast.success('Model settings saved'); }
+    catch (error) { toast.error(error.message); }
+    finally { setBusy(false); }
+  }
+  async function test() {
+    setBusy(true);
     try {
-      await onSave({
-        provider_name: provider,
-        api_endpoint: provider === 'custom' ? apiEndpoint : null,
-        model_name: selectedModel || null,
-        fallback_to_default: fallbackEnabled,
-        call_limit: callLimit,
-        api_key: apiKey || null
-      });
-      
-      toast.success('AI provider updated successfully!');
-      setApiKey('');
-    } catch (error) {
-      toast.error('Failed to save: ' + error.message);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-  
-  const usagePercentage = (monthlyUsage / callLimit) * 100;
-  
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-slate-800 mb-2 flex items-center gap-2">
-          <Cpu className="w-6 h-6 text-violet-500" />
-          AI Provider Settings
-        </h2>
-        <p className="text-slate-600">
-          Connect external AI services or use the default privacy-first provider
-        </p>
-      </div>
-      
-      {/* Usage Stats */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Monthly API Usage</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-600">
-                {monthlyUsage} / {callLimit === 10000 ? '10K' : callLimit} calls
-              </span>
-              <span className={`font-medium ${usagePercentage > 90 ? 'text-red-600' : usagePercentage > 70 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                {Math.round(usagePercentage)}%
-              </span>
-            </div>
-            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${usagePercentage}%` }}
-                className={`h-full ${usagePercentage > 90 ? 'bg-red-500' : usagePercentage > 70 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Provider Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Select AI Provider</CardTitle>
-          <CardDescription>
-            Choose which AI service powers your companion's intelligence
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {AI_PROVIDERS.map((prov) => {
-              const Icon = prov.icon;
-              const isSelected = provider === prov.id;
-              const canUse = canUseProvider(prov.tier);
-              
-              return (
-                <motion.button
-                  key={prov.id}
-                  whileHover={canUse ? { scale: 1.02 } : {}}
-                  whileTap={canUse ? { scale: 0.98 } : {}}
-                  onClick={() => canUse && setProvider(prov.id)}
-                  disabled={!canUse}
-                  className={`
-                    relative p-4 rounded-xl border-2 text-left transition-all
-                    ${isSelected 
-                      ? 'border-violet-500 bg-violet-50' 
-                      : canUse 
-                        ? 'border-slate-200 hover:border-slate-300' 
-                        : 'border-slate-100 bg-slate-50 opacity-60 cursor-not-allowed'
-                    }
-                  `}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={`
-                      p-2 rounded-lg
-                      ${isSelected ? 'bg-violet-100' : 'bg-slate-100'}
-                    `}>
-                      <Icon className={`w-5 h-5 ${isSelected ? 'text-violet-600' : 'text-slate-500'}`} />
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className={`font-semibold ${isSelected ? 'text-violet-800' : 'text-slate-800'}`}>
-                          {prov.name}
-                        </h3>
-                        {!canUse && (
-                          <Lock className="w-4 h-4 text-slate-400" />
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500 mb-2">{prov.description}</p>
-                      <Badge 
-                        variant="secondary" 
-                        className={`text-xs capitalize ${!canUse ? 'bg-slate-200' : ''}`}
-                      >
-                        {prov.tier}
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  {isSelected && (
-                    <div className="absolute top-2 right-2">
-                      <Check className="w-5 h-5 text-violet-600" />
-                    </div>
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Configuration */}
-      {selectedProvider && selectedProvider.requiresKey && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Provider Configuration</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Model Selection */}
-            {selectedProvider.models && (
-              <div>
-                <Label>Model</Label>
-                <Select value={selectedModel} onValueChange={setSelectedModel}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select a model" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectedProvider.models.map(model => (
-                      <SelectItem key={model} value={model}>
-                        {model}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            
-            {/* Custom Endpoint */}
-            {provider === 'custom' && (
-              <div>
-                <Label>API Endpoint URL</Label>
-                <Input
-                  type="url"
-                  value={apiEndpoint}
-                  onChange={(e) => setApiEndpoint(e.target.value)}
-                  placeholder="https://api.example.com/v1/chat"
-                  className="mt-1"
-                />
-              </div>
-            )}
-            
-            {/* API Key */}
-            <div>
-              <Label className="flex items-center gap-2">
-                <Key className="w-4 h-4" />
-                API Key
-              </Label>
-              <div className="flex gap-2 mt-1">
-                <Input
-                  type={showKey ? 'text' : 'password'}
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="Enter your API key"
-                  className="flex-1 font-mono"
-                />
-                <Button
-                  variant="outline"
-                  onClick={() => setShowKey(!showKey)}
-                  type="button"
-                >
-                  {showKey ? '👁️' : '👁️‍🗨️'}
-                </Button>
-              </div>
-              <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                <Shield className="w-3 h-3" />
-                Your API key is encrypted and never shared
-              </p>
-            </div>
-            
-            {/* Fallback */}
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-              <div>
-                <h4 className="font-medium text-slate-800 text-sm">Enable Fallback</h4>
-                <p className="text-xs text-slate-500">
-                  Use default provider if custom provider fails
-                </p>
-              </div>
-              <Switch
-                checked={fallbackEnabled}
-                onCheckedChange={setFallbackEnabled}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Privacy Notice */}
-      <Card className="border-emerald-300 bg-emerald-50">
-        <CardContent className="flex items-start gap-3 p-4">
-          <Shield className="w-5 h-5 text-emerald-600 mt-0.5" />
-          <div>
-            <h4 className="font-semibold text-emerald-800 text-sm mb-1">
-              Privacy & Security
-            </h4>
-            <p className="text-xs text-emerald-700">
-              External AI providers may process your conversation data according to their own privacy policies. 
-              The default provider ensures all data stays encrypted and private. API keys are stored securely with end-to-end encryption.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Save Button */}
-      <div className="flex justify-end gap-2">
-        <Button
-          onClick={handleSave}
-          disabled={isSaving || !canUseProvider(selectedProvider?.tier)}
-          className="bg-violet-600 hover:bg-violet-700"
-        >
-          {isSaving ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <Check className="w-4 h-4 mr-2" />
-              Save Configuration
-            </>
-          )}
-        </Button>
-      </div>
+      const response = await pupil.functions.invoke('testAIProvider');
+      if (response.data.error) throw new Error(response.data.error);
+      toast.success(response.data.message);
+    } catch (error) { toast.error(error.message); }
+    finally { setBusy(false); }
+  }
+  return <form onSubmit={save} className="space-y-6">
+    <div className="grid md:grid-cols-3 gap-3" role="group" aria-label="Model provider">
+      {PROVIDERS.map(provider => <button key={provider.id} type="button" aria-pressed={form.provider_name === provider.id} onClick={() => update({ provider_name: provider.id, api_key: '', allow_cloud: false, model_name: provider.id === currentConfig?.provider_name ? currentConfig.model_name : '', api_endpoint: provider.id === currentConfig?.provider_name ? currentConfig.api_endpoint : provider.id === 'local' ? 'http://127.0.0.1:8080/v1' : '' })} className={`p-4 text-left rounded-2xl border-2 ${form.provider_name === provider.id ? 'border-violet-500 bg-violet-50' : 'border-slate-200 bg-white'}`}>
+        <provider.icon className="w-5 h-5 text-violet-600 mb-3" /><strong>{provider.name}</strong><p className="text-sm text-slate-500 mt-2">{provider.description}</p>
+      </button>)}
     </div>
-  );
+    {form.provider_name !== 'builtin' && <div className="bg-white rounded-2xl border p-5 space-y-4">
+      <div><Label htmlFor="api-endpoint">API base URL</Label><Input id="api-endpoint" type="url" required value={form.api_endpoint} onChange={e => update({ api_endpoint: e.target.value })} placeholder="http://127.0.0.1:8080/v1" /></div>
+      <div><Label htmlFor="model-id">Model ID</Label><Input id="model-id" required value={form.model_name} onChange={e => update({ model_name: e.target.value })} placeholder="Exact model ID from your model server" /></div>
+      <div><Label htmlFor="api-key">API key (optional for local models)</Label><Input id="api-key" type="password" autoComplete="off" value={form.api_key} onChange={e => update({ api_key: e.target.value })} placeholder={currentConfig?.has_api_key ? 'Saved key; leave blank to keep' : 'Enter a key if your server requires it'} /><p className="text-xs text-slate-500 mt-1">Saved credentials are protected by your Windows account using DPAPI.</p></div>
+      {currentConfig?.has_api_key && <label className="flex gap-2 text-sm"><input type="checkbox" checked={form.clear_api_key} onChange={e => update({ clear_api_key: e.target.checked })} />Remove saved key</label>}
+      {form.provider_name === 'cloud' && <label className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 text-sm"><input type="checkbox" required checked={form.allow_cloud} onChange={e => update({ allow_cloud: e.target.checked })} /><span>Allow this cloud provider to process my messages, companion identity, selected memories, and recent conversation history. Its terms and charges apply.</span></label>}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div><Label htmlFor="context-budget">Context budget (characters)</Label><Input id="context-budget" type="number" min="4000" max="48000" value={form.context_chars} onChange={e => update({ context_chars: Number(e.target.value) })} /></div>
+        <div><Label htmlFor="output-budget">Maximum output tokens</Label><Input id="output-budget" type="number" min="128" max="2048" value={form.max_output_tokens} onChange={e => update({ max_output_tokens: Number(e.target.value) })} /></div>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div><Label htmlFor="model-temperature">Temperature</Label><Input id="model-temperature" type="number" min="0" max="2" step="0.1" value={form.temperature} onChange={e => update({ temperature: Number(e.target.value) })} /></div>
+        <div><Label htmlFor="structured-output">Response format</Label><select id="structured-output" className="w-full h-10 rounded-md border bg-white px-3 text-sm" value={form.structured_output} onChange={e => update({ structured_output: e.target.value })}><option value="json_object">JSON object (compatible servers)</option><option value="json_schema">Strict JSON schema (managed local model)</option></select></div>
+      </div>
+      <label className="flex gap-3 text-sm"><input type="checkbox" checked={form.fallback_to_default} onChange={e => update({ fallback_to_default: e.target.checked })} />Use clearly labelled basic replies if the model fails. Fallback never switches to a cloud service.</label>
+    </div>}
+    <div className="flex flex-wrap gap-3"><Button type="submit" disabled={busy} className="bg-violet-600 hover:bg-violet-700"><Check className="w-4 h-4 mr-2" />{busy ? 'Working…' : 'Save configuration'}</Button><Button type="button" variant="outline" disabled={busy} onClick={test}>Test saved connection</Button></div>
+  </form>;
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { pupil } from '@/api/pupilClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
@@ -9,27 +9,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, ShoppingBag, Package, Filter } from 'lucide-react';
 import StoreItemCard from '@/components/store/StoreItemCard';
 
-const DEFAULT_STORE_ITEMS = [
-  // Treats
-  { name: 'Berry Delight', description: 'A sweet berry treat that boosts happiness', category: 'treat', price: 0.49, effect_type: 'happiness', effect_value: 15, rarity: 'common', required_tier: 'basic' },
-  { name: 'Cosmic Cookie', description: 'A magical cookie from the stars', category: 'treat', price: 0.99, effect_type: 'hunger', effect_value: 25, rarity: 'uncommon', required_tier: 'basic' },
-  { name: 'Golden Nectar', description: 'Legendary treat with amazing effects', category: 'treat', price: 2.99, effect_type: 'happiness', effect_value: 40, rarity: 'legendary', required_tier: 'premium' },
-  
-  // Vitamins
-  { name: 'Brain Boost', description: 'Enhances learning capacity', category: 'vitamin', price: 1.49, effect_type: 'knowledge', effect_value: 10, rarity: 'common', required_tier: 'basic' },
-  { name: 'Energy Elixir', description: 'Increases fitness and stamina', category: 'vitamin', price: 1.49, effect_type: 'fitness', effect_value: 15, rarity: 'uncommon', required_tier: 'basic' },
-  { name: 'Memory Enhancer', description: 'Deep reasoning boost', category: 'vitamin', price: 4.99, effect_type: 'knowledge', effect_value: 30, rarity: 'rare', required_tier: 'premium' },
-  
-  // Cosmetics
-  { name: 'Sparkle Aura', description: 'Adds a shimmering effect', category: 'cosmetic', price: 1.99, effect_type: 'appearance', effect_value: 1, rarity: 'common', required_tier: 'basic' },
-  { name: 'Rainbow Trail', description: 'Colorful trail follows your companion', category: 'cosmetic', price: 3.99, effect_type: 'appearance', effect_value: 1, rarity: 'rare', required_tier: 'premium' },
-  { name: 'Celestial Crown', description: 'A crown fit for royalty', category: 'cosmetic', price: 6.99, effect_type: 'appearance', effect_value: 1, rarity: 'legendary', required_tier: 'elite' },
-  
-  // Themes
-  { name: 'Forest Sanctuary', description: 'A peaceful forest environment', category: 'theme', price: 2.99, effect_type: 'appearance', effect_value: 1, rarity: 'uncommon', required_tier: 'basic' },
-  { name: 'Crystal Cavern', description: 'A mystical crystal cave', category: 'theme', price: 4.99, effect_type: 'appearance', effect_value: 1, rarity: 'rare', required_tier: 'premium' },
-  { name: 'Cosmic Nebula', description: 'Float among the stars', category: 'theme', price: 9.99, effect_type: 'appearance', effect_value: 1, rarity: 'legendary', required_tier: 'elite' }
-];
 
 export default function Store() {
   const navigate = useNavigate();
@@ -46,52 +25,27 @@ export default function Store() {
   
   const loadData = async () => {
     const [items, subs, inv] = await Promise.all([
-      base44.entities.StoreItem.list(),
-      base44.entities.Subscription.list(),
-      base44.entities.Inventory.list()
+      pupil.entities.StoreItem.list(),
+      pupil.entities.Subscription.list(),
+      pupil.entities.Inventory.list()
     ]);
     
-    // If no items exist, create defaults
-    if (items.length === 0) {
-      await base44.entities.StoreItem.bulkCreate(DEFAULT_STORE_ITEMS);
-      setStoreItems(DEFAULT_STORE_ITEMS);
-    } else {
-      setStoreItems(items);
-    }
-    
+    setStoreItems(items);
     setSubscription(subs[0] || { tier: 'free' });
     setInventory(inv);
     setLoading(false);
   };
   
   const handlePurchase = async (item) => {
-    if (subscription?.tier === 'free') {
-      toast.error('Upgrade to Basic tier to purchase items');
-      navigate(createPageUrl('Settings'));
-      return;
-    }
-    
     setPurchasing(item.id);
-    
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Add to inventory
-    await base44.entities.Inventory.create({
-      item_id: item.id,
-      item_name: item.name,
-      quantity: 1,
-      purchased_at: new Date().toISOString()
-    });
-    
-    toast.success(`${item.name} added to your inventory!`);
-    setPurchasing(null);
-    
-    // Refresh inventory
-    const newInv = await base44.entities.Inventory.list();
-    setInventory(newInv);
+    try {
+      const { data } = await pupil.functions.invoke('addInventoryItem', { item_id: item.id });
+      if (data.error) throw new Error(data.error);
+      setInventory(await pupil.entities.Inventory.list()); toast.success(item.name + ' added');
+    } catch (error) { toast.error(error.message); }
+    finally { setPurchasing(null); }
   };
-  
+
   const filteredItems = activeCategory === 'all' 
     ? storeItems 
     : storeItems.filter(item => item.category === activeCategory);

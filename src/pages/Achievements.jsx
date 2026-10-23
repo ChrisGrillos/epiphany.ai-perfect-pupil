@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { pupil } from '@/api/pupilClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -81,8 +81,8 @@ export default function Achievements() {
   
   const loadData = async () => {
     const [achieved, companions] = await Promise.all([
-      base44.entities.Achievement.list(),
-      base44.entities.Companion.list()
+      pupil.entities.Achievement.list(),
+      pupil.entities.Companion.list()
     ]);
     
     setAchievements(achieved);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { pupil } from '@/api/pupilClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +23,7 @@ export default function BrainExportPanel({ companion, subscription }) {
     }
     setExporting(true);
 
-    const response = await base44.functions.invoke('exportBrain', {
+    const response = await pupil.functions.invoke('exportBrain', {
       companion_id: companion.id,
       passphrase
     });
@@ -74,7 +74,7 @@ export default function BrainExportPanel({ companion, subscription }) {
       return;
     }
 
-    const response = await base44.functions.invoke('importBrain', {
+    const response = await pupil.functions.invoke('importBrain', {
       companion_id: companion.id,
       brain_package: brainData,
       passphrase

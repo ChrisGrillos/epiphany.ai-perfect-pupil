@@ -64,7 +64,7 @@ export default function NotepadEditor({
     
     const reader = new FileReader();
     reader.onload = (event) => {
-      setNotepadContent(event.target.result);
+      setNotepadContent(String(event.target.result || ''));
       toast.success('File loaded successfully!');
     };
     reader.readAsText(file);

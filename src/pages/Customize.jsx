@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { pupil } from '@/api/pupilClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -25,12 +25,12 @@ export default function Customize() {
   
   const loadData = async () => {
     const [companions, subs, mems, rules, algStates, entitlementResponse] = await Promise.all([
-      base44.entities.Companion.list(),
-      base44.entities.Subscription.list(),
-      base44.entities.CompanionMemory.list(),
-      base44.entities.BehaviorRule.list(),
-      base44.entities.AlgorithmState.list(),
-      base44.functions.invoke('getEntitlements', {})
+      pupil.entities.Companion.list(),
+      pupil.entities.Subscription.list(),
+      pupil.entities.CompanionMemory.list(),
+      pupil.entities.BehaviorRule.list(),
+      pupil.entities.AlgorithmState.list(),
+      pupil.functions.invoke('getEntitlements', {})
     ]);
     
     if (companions.length === 0) {
@@ -48,7 +48,7 @@ export default function Customize() {
   };
   
   const handleParseNotepad = async (content) => {
-    const response = await base44.functions.invoke('applyNotepadCustomization', {
+    const response = await pupil.functions.invoke('applyNotepadCustomization', {
       companion_id: companion?.id,
       content
     });
@@ -57,9 +57,9 @@ export default function Customize() {
     }
 
     const [newMems, newRules, refreshedCompanions] = await Promise.all([
-      base44.entities.CompanionMemory.list(),
-      base44.entities.BehaviorRule.list(),
-      base44.entities.Companion.list()
+      pupil.entities.CompanionMemory.list(),
+      pupil.entities.BehaviorRule.list(),
+      pupil.entities.Companion.list()
     ]);
 
     setMemories(newMems || []);

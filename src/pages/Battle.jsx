@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { pupil } from '@/api/pupilClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
@@ -30,25 +30,43 @@ export default function Battle() {
   }, []);
 
   const loadData = async () => {
-    const [companions, rosterUnits] = await Promise.all([
-      base44.entities.Companion.list(),
-      base44.entities.PupilRoster.list()
-    ]);
+    const companions = await pupil.entities.Companion.list();
 
     if (companions.length === 0) {
       navigate(createPageUrl('Welcome'));
       return;
     }
 
-    setCompanion(companions[0]);
-    setRoster(rosterUnits.filter(r => r.companion_id !== 'system'));
+    const activeCompanion = companions[0];
+    setCompanion(activeCompanion);
+
+    let ensuredUnit = null;
+    if (['teenager', 'adult'].includes(String(activeCompanion.stage || '').toLowerCase())) {
+      const ensureResponse = await pupil.functions.invoke('ensureCombatRoster', {
+        companion_id: activeCompanion.id
+      });
+      if (ensureResponse.data?.error) {
+        toast.error(ensureResponse.data.error);
+      } else {
+        ensuredUnit = ensureResponse.data?.combat_roster_unit || null;
+      }
+    }
+
+    const rosterUnits = await pupil.entities.PupilRoster.list();
+    const playerRoster = rosterUnits.filter(r => r.companion_id !== 'system');
+    if (ensuredUnit && !playerRoster.some(unit => unit.id === ensuredUnit.id)) {
+      playerRoster.unshift(ensuredUnit);
+    }
+    setRoster(playerRoster);
+    const resumed = await pupil.functions.invoke('resumeBattle');
+    if (resumed.data?.battle) { setBattleData(resumed.data); setPhase('battle'); }
     setLoading(false);
   };
 
   const handleStartBattle = async ({ battleType, mode, selectedIds, pcpBet }) => {
     try {
       setLoading(true);
-      const response = await base44.functions.invoke('startBattle', {
+      const response = await pupil.functions.invoke('startBattle', {
         battle_type: battleType,
         mode,
         team_a_ids: selectedIds,
@@ -70,8 +88,9 @@ export default function Battle() {
   };
 
   const handleSubmitRound = async (actions) => {
-    const response = await base44.functions.invoke('resolveBattleRound', {
+    const response = await pupil.functions.invoke('resolveBattleRound', {
       battle_id: battleData.battle.id,
+      expected_round: battleData.battle.current_round,
       actions
     });
 
@@ -101,7 +120,7 @@ export default function Battle() {
 
     if (roundResult.battle_status === 'completed') {
       // Finalize and get rewards
-      const finalResponse = await base44.functions.invoke('finalizeBattle', {
+      const finalResponse = await pupil.functions.invoke('finalizeBattle', {
         battle_id: battleData.battle.id
       });
       if (finalResponse.data?.error) {
@@ -116,7 +135,7 @@ export default function Battle() {
 
       // Phase 5: Check achievements after battle
       if (companion?.id) {
-        base44.functions.invoke('checkAchievements', { companion_id: companion.id }).then(res => {
+        pupil.functions.invoke('checkAchievements', { companion_id: companion.id }).then(res => {
           if (res.data?.newly_unlocked?.length > 0) {
             res.data.newly_unlocked.forEach(a => {
               toast.success(`🏆 Achievement: ${a.key.replace(/_/g, ' ')} (+${a.xp} XP)`);

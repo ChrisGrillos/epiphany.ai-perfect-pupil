@@ -8,7 +8,8 @@ import ReactMarkdown from 'react-markdown';
 export default function ChatInterface({ 
   companion, 
   messages = [], 
-  onSendMessage, 
+  onSendMessage,
+  onSaveMemory,
   isTyping = false,
   disabled = false 
 }) {
@@ -22,7 +23,7 @@ export default function ChatInterface({
   
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!input.trim() || disabled) return;
+    if (!input.trim() || disabled || isTyping) return;
     
     onSendMessage(input.trim());
     setInput('');
@@ -100,6 +101,8 @@ export default function ChatInterface({
                     <ReactMarkdown>{message.content}</ReactMarkdown>
                   )}
                 </div>
+                {message.provider && <p className="text-[10px] text-slate-400 mt-2">{message.response_source === 'memory_confirmation' ? 'App · memory confirmation' : message.provider === 'builtin' ? 'Basic · scripted reply' : message.provider + ' · ' + message.model}{message.fallback ? ' · model unavailable' : ''}</p>}
+                {message.suggested_memory && <div className="mt-2 border-t pt-2 text-xs"><p>Suggested memory: {message.suggested_memory.key}: {message.suggested_memory.value}</p><Button size="sm" variant="outline" className="mt-2" onClick={() => onSaveMemory(message.suggested_memory, index)}>Save memory</Button></div>}
                 {message.memoryCreated && (
                   <div className="mt-2 px-2 py-1 bg-violet-50 rounded-lg flex items-center gap-1.5 text-xs text-violet-600">
                     <span>🧠</span>

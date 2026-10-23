@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from '../server/runtime.js';
 import {
   buildUserOwnerKeys,
   getUserCurrencyRecord,
@@ -27,21 +27,21 @@ const PCP_CONFIG = {
   pvp_lose: 0
 };
 
-async function cleanupTemporaryAi(base44: any, battle: any): Promise<void> {
+async function cleanupTemporaryAi(pupil: any, battle: any): Promise<void> {
   if (battle.battle_type !== 'training_ai') return;
   for (const rosterId of battle.team_b || []) {
     try {
-      await base44.asServiceRole.entities.PupilRoster.delete(rosterId);
+      await pupil.service.entities.PupilRoster.delete(rosterId);
     } catch {
       // Non-fatal cleanup.
     }
   }
 }
 
-Deno.serve(async (req) => {
+export default (async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const pupil = createClientFromRequest(req);
+    const user = await pupil.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing battle_id' }, { status: 400 });
     }
 
-    const battles = await base44.asServiceRole.entities.Battle.filter({ id: battle_id });
+    const battles = await pupil.service.entities.Battle.filter({ id: battle_id });
     if (!battles || battles.length === 0) {
       return Response.json({ error: 'Battle not found' }, { status: 404 });
     }
@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Battle is not completed' }, { status: 400 });
     }
 
-    const existingResults = await base44.asServiceRole.entities.BattleResult.filter({ battle_id });
+    const existingResults = await pupil.service.entities.BattleResult.filter({ battle_id });
     if (existingResults && existingResults.length > 0) {
       const existing = existingResults[0];
       return Response.json({
@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const turns = await base44.asServiceRole.entities.BattleTurn.filter({ battle_id });
+    const turns = await pupil.service.entities.BattleTurn.filter({ battle_id });
 
     const teamASummary = { total_damage_dealt: 0, total_damage_taken: 0, total_healing: 0, kos_scored: 0, kos_suffered: 0, mvp_roster_id: null };
     const teamBSummary = { total_damage_dealt: 0, total_damage_taken: 0, total_healing: 0, kos_scored: 0, kos_suffered: 0, mvp_roster_id: null };
@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
     const endTime = battle.completed_at ? new Date(battle.completed_at) : new Date();
     const durationSeconds = Math.max(0, Math.floor((endTime.getTime() - startTime.getTime()) / 1000));
 
-    const result = await base44.asServiceRole.entities.BattleResult.create({
+    const result = await pupil.service.entities.BattleResult.create({
       battle_id,
       winner: battle.winner,
       total_rounds: battle.current_round,
@@ -182,7 +182,7 @@ Deno.serve(async (req) => {
     for (const [rosterId, xp] of Object.entries(xpAwards)) {
       if ((battle.team_b || []).map((id: any) => String(id)).includes(rosterId) && ownerB === 'system') continue;
 
-      const units = await base44.asServiceRole.entities.PupilRoster.filter({ id: rosterId });
+      const units = await pupil.service.entities.PupilRoster.filter({ id: rosterId });
       if (!units || units.length === 0) continue;
       const unit = units[0];
       const isTeamA = (battle.team_a || []).map((id: any) => String(id)).includes(rosterId);
@@ -190,7 +190,7 @@ Deno.serve(async (req) => {
       const won = battle.winner === team;
       const drew = battle.winner === 'draw';
 
-      await base44.asServiceRole.entities.PupilRoster.update(rosterId, {
+      await pupil.service.entities.PupilRoster.update(rosterId, {
         total_xp: Number(unit.total_xp || 0) + Number(xp || 0),
         total_battles: Number(unit.total_battles || 0) + 1,
         wins: Number(unit.wins || 0) + (won ? 1 : 0),
@@ -204,10 +204,10 @@ Deno.serve(async (req) => {
 
     for (const [ownerKey, pcp] of Object.entries(pcpAwards)) {
       if (!ownerKey || ownerKey === 'system' || Number(pcp || 0) <= 0) continue;
-      const currency = await getUserCurrencyRecord(base44, [ownerKey]);
+      const currency = await getUserCurrencyRecord(pupil, [ownerKey]);
       if (!currency) continue;
 
-      await base44.asServiceRole.entities.UserCurrency.update(currency.id, {
+      await pupil.service.entities.UserCurrency.update(currency.id, {
         pcp_balance: Number(currency.pcp_balance || 0) + Number(pcp || 0),
         pcp_earned: Number(currency.pcp_earned || 0) + Number(pcp || 0),
         pcp_won: Number(currency.pcp_won || 0) + Number(pcp || 0)
@@ -215,7 +215,7 @@ Deno.serve(async (req) => {
     }
 
     for (const rosterId of battle.team_a || []) {
-      const units = await base44.asServiceRole.entities.PupilRoster.filter({ id: rosterId });
+      const units = await pupil.service.entities.PupilRoster.filter({ id: rosterId });
       if (!units || units.length === 0 || !units[0].companion_id || units[0].companion_id === 'system') continue;
 
       const companionId = units[0].companion_id;
@@ -224,7 +224,7 @@ Deno.serve(async (req) => {
       const healDone = unitTurns.reduce((sum: number, t: any) => sum + Number(t.healing_done || 0), 0);
       const statusCount = unitTurns.reduce((sum: number, t: any) => sum + Number(t.statuses_applied?.length || 0), 0);
 
-      await base44.asServiceRole.entities.InteractionLog.create({
+      await pupil.service.entities.InteractionLog.create({
         companion_id: companionId,
         action_type: 'battle',
         details: { battle_id, winner: battle.winner, xp: xpAwards[String(rosterId)] || 0 },
@@ -233,7 +233,7 @@ Deno.serve(async (req) => {
         source: 'battle'
       });
 
-      const companions = await base44.asServiceRole.entities.Companion.filter({ id: companionId });
+      const companions = await pupil.service.entities.Companion.filter({ id: companionId });
       if (!companions || companions.length === 0) continue;
 
       const comp = companions[0];
@@ -258,10 +258,10 @@ Deno.serve(async (req) => {
         )
       );
 
-      await base44.asServiceRole.entities.Companion.update(companionId, companionChanges);
+      await pupil.service.entities.Companion.update(companionId, companionChanges);
     }
 
-    await cleanupTemporaryAi(base44, battle);
+    await cleanupTemporaryAi(pupil, battle);
 
     return Response.json({
       result,

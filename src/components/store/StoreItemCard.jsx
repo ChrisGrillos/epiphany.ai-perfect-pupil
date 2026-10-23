@@ -96,7 +96,7 @@ export default function StoreItemCard({
               Processing...
             </span>
           ) : canPurchase ? (
-            `Buy for $${item.price?.toFixed(2)}`
+            'Add to inventory'
           ) : (
             `Upgrade to ${item.required_tier}`
           )}

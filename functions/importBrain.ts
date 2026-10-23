@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from '../server/runtime.js';
 import {
   SCHEMA_ASSUMPTIONS,
   buildUserOwnerKeys,
@@ -321,10 +321,10 @@ function validateDecryptedBrainData(rawBrainData: any): any {
   };
 }
 
-Deno.serve(async (req) => {
+export default (async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const pupil = createClientFromRequest(req);
+    const user = await pupil.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -352,7 +352,7 @@ Deno.serve(async (req) => {
     }
 
     const ownerKeys = buildUserOwnerKeys(user);
-    const entitlements = await resolveUserEntitlements(base44, ownerKeys);
+    const entitlements = await resolveUserEntitlements(pupil, ownerKeys);
     if (!entitlements.is_paid) {
       return Response.json(
         { error: `Brain import requires a paid subscription (Basic or above). Your current tier is ${entitlements.tier}.` },
@@ -361,7 +361,7 @@ Deno.serve(async (req) => {
     }
 
     const companionId = String(companion_id);
-    const targetCompanion = await getOwnedRecordById(base44, 'Companion', companionId, ownerKeys);
+    const targetCompanion = await getOwnedRecordById(pupil, 'Companion', companionId, ownerKeys);
     if (!targetCompanion) {
       return Response.json({ error: 'Companion not found or not owned by caller' }, { status: 404 });
     }
@@ -394,10 +394,10 @@ Deno.serve(async (req) => {
       );
     }
     if (Object.keys(companionUpdate).length > 0) {
-      await base44.asServiceRole.entities.Companion.update(companionId, companionUpdate);
+      await pupil.service.entities.Companion.update(companionId, companionUpdate);
     }
 
-    const existingMemories = await base44.asServiceRole.entities.CompanionMemory.filter({ companion_id: companionId });
+    const existingMemories = await pupil.service.entities.CompanionMemory.filter({ companion_id: companionId });
     const existingMemoryByKey = new Map((existingMemories || []).map((m: any) => [m.memory_key, m]));
     for (const mem of validated.memories || []) {
       const payload = {
@@ -408,18 +408,18 @@ Deno.serve(async (req) => {
         importance: mem.importance,
         source: mem.source || 'import',
         tags: mem.tags,
-        is_encrypted: true
+        is_encrypted: false
       };
       const existing = existingMemoryByKey.get(mem.memory_key);
       if (existing) {
-        await base44.asServiceRole.entities.CompanionMemory.update(existing.id, payload);
+        await pupil.service.entities.CompanionMemory.update(existing.id, payload);
       } else {
-        const created = await base44.asServiceRole.entities.CompanionMemory.create(payload);
+        const created = await pupil.service.entities.CompanionMemory.create(payload);
         existingMemoryByKey.set(mem.memory_key, created);
       }
     }
 
-    const existingRules = await base44.asServiceRole.entities.BehaviorRule.filter({ companion_id: companionId });
+    const existingRules = await pupil.service.entities.BehaviorRule.filter({ companion_id: companionId });
     const existingRuleByName = new Map((existingRules || []).map((r: any) => [r.rule_name, r]));
     for (const rule of validated.behavior_rules || []) {
       const payload = {
@@ -434,17 +434,18 @@ Deno.serve(async (req) => {
       };
       const existing = existingRuleByName.get(rule.rule_name);
       if (existing) {
-        await base44.asServiceRole.entities.BehaviorRule.update(existing.id, payload);
+        await pupil.service.entities.BehaviorRule.update(existing.id, payload);
       } else {
-        const created = await base44.asServiceRole.entities.BehaviorRule.create(payload);
+        const created = await pupil.service.entities.BehaviorRule.create(payload);
         existingRuleByName.set(rule.rule_name, created);
       }
     }
 
     for (const session of validated.chat_sessions || []) {
-      const createdSession = await base44.asServiceRole.entities.ChatSession.create({
+      const createdSession = await pupil.service.entities.ChatSession.create({
         companion_id: companionId,
         title: session.title || 'Imported Session',
+        is_imported: true,
         message_count: session.messages.length,
         mood_at_start: session.mood_at_start || '',
         mood_at_end: session.mood_at_end || '',
@@ -452,7 +453,7 @@ Deno.serve(async (req) => {
         last_message_at: new Date().toISOString()
       });
       for (const message of session.messages) {
-        await base44.asServiceRole.entities.ChatMessage.create({
+        await pupil.service.entities.ChatMessage.create({
           session_id: createdSession.id,
           companion_id: companionId,
           role: message.role,
@@ -463,7 +464,7 @@ Deno.serve(async (req) => {
     }
 
     for (const attempt of validated.evolution_history || []) {
-      await base44.asServiceRole.entities.EvolutionAttempt.create({
+      await pupil.service.entities.EvolutionAttempt.create({
         companion_id: companionId,
         puzzle_id: null,
         from_stage: attempt.from_stage,
@@ -477,18 +478,18 @@ Deno.serve(async (req) => {
     }
 
     if (validated.algorithm_state) {
-      const existingStates = await base44.asServiceRole.entities.AlgorithmState.filter({ companion_id: companionId });
+      const existingStates = await pupil.service.entities.AlgorithmState.filter({ companion_id: companionId });
       if (existingStates && existingStates.length > 0) {
-        await base44.asServiceRole.entities.AlgorithmState.update(existingStates[0].id, validated.algorithm_state);
+        await pupil.service.entities.AlgorithmState.update(existingStates[0].id, validated.algorithm_state);
       } else {
-        await base44.asServiceRole.entities.AlgorithmState.create({
+        await pupil.service.entities.AlgorithmState.create({
           companion_id: companionId,
           ...validated.algorithm_state
         });
       }
     }
 
-    await base44.asServiceRole.entities.InteractionLog.create({
+    await pupil.service.entities.InteractionLog.create({
       companion_id: companionId,
       action_type: 'brain_import',
       details: {
@@ -501,7 +502,7 @@ Deno.serve(async (req) => {
       source: 'import'
     });
 
-    const updated = await base44.asServiceRole.entities.Companion.filter({ id: companionId });
+    const updated = await pupil.service.entities.Companion.filter({ id: companionId });
     return Response.json({ success: true, companion: updated?.[0] || null });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

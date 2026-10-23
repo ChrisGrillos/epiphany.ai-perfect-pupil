@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from '../server/runtime.js';
 import {
   buildUserOwnerKeys,
   isTierAtLeast,
@@ -101,10 +101,10 @@ function calculateLevel(xp) {
   return Math.floor(Math.sqrt(xp / 10)) + 1;
 }
 
-Deno.serve(async (req) => {
+export default (async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const pupil = createClientFromRequest(req);
+    const user = await pupil.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
     }
 
     const ownerKeys = buildUserOwnerKeys(user);
-    const entitlements = await resolveUserEntitlements(base44, ownerKeys);
+    const entitlements = await resolveUserEntitlements(pupil, ownerKeys);
     const requiredTier = ACTION_REQUIRED_TIERS[action_type] || 'free';
     if (!isTierAtLeast(entitlements.tier, requiredTier)) {
       return Response.json(
@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const companion = await getOwnedRecordById(base44, 'Companion', String(companion_id), ownerKeys);
+    const companion = await getOwnedRecordById(pupil, 'Companion', String(companion_id), ownerKeys);
     if (!companion) {
       return Response.json({ error: 'Companion not found or not owned by caller' }, { status: 404 });
     }
@@ -214,10 +214,10 @@ Deno.serve(async (req) => {
     const responseText = responses[Math.floor(Math.random() * responses.length)].replace('{name}', companion.name);
 
     // Commit updates
-    await base44.asServiceRole.entities.Companion.update(companion_id, appliedChanges);
+    await pupil.service.entities.Companion.update(companion_id, appliedChanges);
 
     // Log the interaction
-    await base44.asServiceRole.entities.InteractionLog.create({
+    await pupil.service.entities.InteractionLog.create({
       companion_id,
       action_type,
       stat_changes: appliedChanges,
