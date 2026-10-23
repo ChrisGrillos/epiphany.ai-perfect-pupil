@@ -1,0 +1,91 @@
+{
+  "name": "BattleResult",
+  "type": "object",
+  "properties": {
+    "battle_id": {
+      "type": "string",
+      "description": "Reference to Battle entity"
+    },
+    "winner": {
+      "type": "string",
+      "enum": [
+        "team_a",
+        "team_b",
+        "draw"
+      ]
+    },
+    "total_rounds": {
+      "type": "number"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "description": "Wall-clock time of battle"
+    },
+    "team_a_summary": {
+      "type": "object",
+      "description": "Aggregate stats for team A",
+      "properties": {
+        "total_damage_dealt": {
+          "type": "number"
+        },
+        "total_damage_taken": {
+          "type": "number"
+        },
+        "total_healing": {
+          "type": "number"
+        },
+        "kos_scored": {
+          "type": "number"
+        },
+        "kos_suffered": {
+          "type": "number"
+        },
+        "mvp_roster_id": {
+          "type": "string"
+        }
+      }
+    },
+    "team_b_summary": {
+      "type": "object",
+      "description": "Aggregate stats for team B",
+      "properties": {
+        "total_damage_dealt": {
+          "type": "number"
+        },
+        "total_damage_taken": {
+          "type": "number"
+        },
+        "total_healing": {
+          "type": "number"
+        },
+        "kos_scored": {
+          "type": "number"
+        },
+        "kos_suffered": {
+          "type": "number"
+        },
+        "mvp_roster_id": {
+          "type": "string"
+        }
+      }
+    },
+    "xp_awards": {
+      "type": "object",
+      "description": "Map of roster_id -> XP earned"
+    },
+    "pcp_awards": {
+      "type": "object",
+      "description": "Map of user_id -> PcP earned/lost"
+    },
+    "rewards_distributed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether XP/PcP have been committed to entities"
+    }
+  },
+  "required": [
+    "battle_id",
+    "winner",
+    "total_rounds"
+  ]
+}

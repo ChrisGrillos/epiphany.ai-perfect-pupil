@@ -91,25 +91,25 @@ export default function BrainExportPanel({ companion, subscription }) {
   };
 
   return (
-    <Card className="bg-white rounded-3xl border border-slate-200 shadow-sm">
+    <Card className="bg-card rounded-3xl border border-border shadow-sm">
       <CardContent className="p-6">
         <div className="flex items-center gap-3 mb-4">
           <Brain className="w-6 h-6 text-violet-500" />
-          <h3 className="font-semibold text-slate-800">Brain Export / Import</h3>
+          <h3 className="font-semibold text-foreground">Brain Export / Import</h3>
           {isPaid ? (
             <Badge className="bg-emerald-100 text-emerald-700">Available</Badge>
           ) : (
-            <Badge className="bg-slate-100 text-slate-500">Paid Only</Badge>
+            <Badge className="bg-muted text-muted-foreground">Paid Only</Badge>
           )}
         </div>
 
-        <p className="text-sm text-slate-500 mb-4">
+        <p className="text-sm text-muted-foreground mb-4">
           Save your companion's memories, personality, behavior rules, and evolution history in an encrypted local backup.
           Import with the same passphrase to restore.
         </p>
 
         {!isPaid ? (
-          <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl text-sm text-slate-500">
+          <div className="flex items-center gap-3 p-4 bg-muted rounded-xl text-sm text-muted-foreground">
             <Lock className="w-5 h-5 flex-shrink-0" />
             <span>Upgrade to Basic or higher to export and import brain data.</span>
           </div>

@@ -1,5 +1,9 @@
 # Perfect Pupil — Windows local edition
 
+The October GitHub changes have been reconciled with this Windows/local-model
+edition. See [merge decisions](docs/github-reconciliation.md). Historical hosted
+sources and documentation are preserved in [legacy](legacy/README.md).
+
 A companion app with care, evolution, training battles, durable conversation,
 editable memories, and interchangeable local/cloud language models. Runs without
 Base44, a hosted database, or an account. This is a single-user local application,
@@ -131,3 +135,11 @@ server with `PUPIL_DATA_DIR` pointing inside `output/browser-data`.
 
 See [architecture](docs/architecture.md) for contracts and limits and
 [release checklist](RELEASE_CHECKLIST.md) for remaining release work.
+
+## Contact
+
+Christopher Grillos · Epiphany.AI
+
+Epiphany.AI529@outlook.com · chrisgrillos.cg@gmail.com
+
+[X: @cmgdank](https://x.com/cmgdank)

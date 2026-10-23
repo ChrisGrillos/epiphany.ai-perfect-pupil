@@ -38,3 +38,6 @@ test-results/
 training/.venv/
 training/checkpoints/
 __pycache__/
+**/.app.jsonc
+*.gguf
+*.safetensors

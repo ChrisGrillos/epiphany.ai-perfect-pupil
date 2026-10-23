@@ -50,6 +50,7 @@
 import AISettings from './pages/AISettings';
 import Achievements from './pages/Achievements';
 import Battle from './pages/Battle';
+import CompanionDashboard from './pages/CompanionDashboard';
 import Customize from './pages/Customize';
 import Evolution from './pages/Evolution';
 import Home from './pages/Home';
@@ -58,7 +59,6 @@ import MemoryManager from './pages/MemoryManager';
 import Settings from './pages/Settings';
 import Store from './pages/Store';
 import Welcome from './pages/Welcome';
-import CompanionDashboard from './pages/CompanionDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -66,6 +66,7 @@ export const PAGES = {
     "AISettings": AISettings,
     "Achievements": Achievements,
     "Battle": Battle,
+    "CompanionDashboard": CompanionDashboard,
     "Customize": Customize,
     "Evolution": Evolution,
     "Home": Home,
@@ -74,7 +75,6 @@ export const PAGES = {
     "Settings": Settings,
     "Store": Store,
     "Welcome": Welcome,
-    "CompanionDashboard": CompanionDashboard,
 }
 
 export const pagesConfig = {

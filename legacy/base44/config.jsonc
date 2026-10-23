@@ -1,0 +1,9 @@
+{
+  "name": "Epiphany.AI \u2013 Perfect Pupil\u2122",
+  "site": {
+    "installCommand": "npm install",
+    "buildCommand": "npm run build",
+    "serveCommand": "npm run dev",
+    "outputDirectory": "./dist"
+  }
+}

@@ -109,6 +109,9 @@ npm run test:browser -- --real-model
 ```
 
 Browser artifacts are in `output/browser-real-model/`. The real-model mode tests
+overwrite these paths on later runs. The 2,256 ms browser sample below is the
+historical 17 October result; [23 October reconciliation checks](github-reconciliation.md)
+record the later run separately. Real-model mode tests
 onboarding, care, model configuration and connection, saved-fact recall, an
 explicitly confirmed model-proposed memory, service restart, recall in a new
 conversation, training review/export, combat, inventory and narrow layouts.

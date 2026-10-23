@@ -6,10 +6,10 @@ import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Settings, 
-  ShoppingBag, 
-  Trophy, 
+import {
+  Settings,
+  ShoppingBag,
+  Trophy,
   MessageCircle,
   Sparkles,
   TrendingUp,
@@ -23,6 +23,7 @@ import StatsDisplay from '@/components/companion/StatsDisplay';
 import ActionButtons from '@/components/companion/ActionButtons';
 import ChatInterface from '@/components/companion/ChatInterface';
 import BrainExportPanel from '@/components/companion/BrainExportPanel';
+import PullToRefresh from '@/components/mobile/PullToRefresh';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -39,24 +40,24 @@ export default function Home() {
   const [trainingAllowed, setTrainingAllowed] = useState(false);
   const controllerRef = useRef(null);
   const sendingRef = useRef(false);
-  
+
   useEffect(() => {
     loadData().catch(error => { setLoadError(error.message); setLoading(false); });
     return () => controllerRef.current?.abort();
   }, []);
-  
+
   const loadData = async () => {
     const [companions, subscriptions, entitlementResponse] = await Promise.all([
       pupil.entities.Companion.list(),
       pupil.entities.Subscription.list(),
       pupil.functions.invoke('getEntitlements', {})
     ]);
-    
+
     if (companions.length === 0) {
       navigate(createPageUrl('Welcome'));
       return;
     }
-    
+
     setCompanion(companions[0]);
     const entitlementTier = entitlementResponse?.data?.tier;
     setSubscription(entitlementTier ? { tier: entitlementTier } : (subscriptions[0] || { tier: 'free' }));
@@ -68,31 +69,53 @@ export default function Home() {
     }
     setLoading(false);
   };
-  
+
   const handleAction = async (actionType) => {
     if (!companion) return;
-    
+
     if (actionType === 'gift') {
       navigate(createPageUrl('Store'));
       return;
     }
-    
-    setActionInProgress(true);
-    
-    const response = await pupil.functions.invoke('applyCompanionAction', {
-      companion_id: companion.id,
-      action_type: actionType
-    });
 
-    if (response.data.error) {
-      toast.error(response.data.error);
-      setActionInProgress(false);
-      return;
+    setActionInProgress(true);
+
+    // Optimistic update: apply expected stat changes immediately
+    const OPTIMISTIC_DELTAS = {
+      feed: { hunger: 15, happiness: 5 },
+      exercise: { fitness: 10, happiness: 8, hunger: -10 },
+      study: { knowledge_level: 5, happiness: 3 },
+      interact: { happiness: 10, trust_level: 5 },
+      play: { happiness: 12, fitness: 5, hunger: -5 }
+    };
+    const deltas = OPTIMISTIC_DELTAS[actionType];
+    const previousCompanion = companion;
+    if (deltas) {
+      setCompanion(prev => {
+        const updated = { ...prev };
+        for (const [stat, delta] of Object.entries(deltas)) {
+          updated[stat] = Math.max(0, Math.min(100, (prev[stat] || 0) + delta));
+        }
+        return updated;
+      });
     }
 
-    setCompanion(response.data.companion);
-    toast.success(response.data.response_text);
-    setActionInProgress(false);
+    try {
+      const response = await pupil.functions.invoke('applyCompanionAction', {
+        companion_id: companion.id,
+        action_type: actionType
+      });
+      if (response.data.error) throw new Error(response.data.error);
+      // Reconcile optimistic feedback with server-authoritative state.
+      setCompanion(response.data.companion);
+      toast.success(response.data.response_text);
+    } catch (error) {
+      setCompanion(previousCompanion);
+      toast.error(error.message);
+      return;
+    } finally {
+      setActionInProgress(false);
+    }
 
     // Phase 5: Check achievements after care action
     pupil.functions.invoke('checkAchievements', { companion_id: companion.id }).then(res => {
@@ -101,9 +124,9 @@ export default function Home() {
           toast.success(`🏆 Achievement Unlocked: ${a.key.replace(/_/g, ' ')} (+${a.xp} XP)`);
         });
       }
-    });
+    }).catch(() => { /* Achievement checking can be retried after the next care action. */ });
   };
-  
+
   const handleSendMessage = async (message) => {
     if (!companion || sendingRef.current) return;
     sendingRef.current = true;
@@ -138,11 +161,11 @@ export default function Home() {
   const handlePuzzleClick = () => {
     navigate(createPageUrl('Evolution'));
   };
-  
+
   if (loadError) return <main role="alert" className="p-10"><p>{loadError}</p><Button onClick={() => window.location.reload()}>Reload</Button></main>;
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-cyan-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
@@ -153,78 +176,74 @@ export default function Home() {
       </div>
     );
   }
-  
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-cyan-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
+    <div className="min-h-screen bg-background">
+      {/* Header - hidden on mobile, shown on desktop */}
+      <header className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-40 hidden md:block">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">✨</span>
             <div>
-              <h1 className="font-bold text-slate-800">Epiphany.AI</h1>
-              <p className="text-xs text-slate-500">Perfect Pupil™</p>
+              <h1 className="font-bold text-foreground">Epiphany.AI</h1>
+              <p className="text-xs text-muted-foreground">Perfect Pupil™</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(createPageUrl('Battle'))}
-              title="Battle Arena"
-            >
+            <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('Battle'))} title="Battle Arena">
               <Swords className="w-5 h-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(createPageUrl('MemoryManager'))}
-              title="Memory Manager"
-            >
+            <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('MemoryManager'))} title="Memory Manager">
               <Brain className="w-5 h-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(createPageUrl('Customize'))}
-              title="Customize"
-            >
+            <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('Customize'))} title="Customize">
               <Sparkles className="w-5 h-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(createPageUrl('Store'))}
-            >
+            <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('Store'))}>
               <ShoppingBag className="w-5 h-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(createPageUrl('CompanionDashboard'))}
-              title="Dashboard"
-            >
+            <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('CompanionDashboard'))} title="Dashboard">
               <BarChart3 className="w-5 h-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(createPageUrl('Achievements'))}
-            >
+            <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('Achievements'))}>
               <Trophy className="w-5 h-5" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(createPageUrl('Settings'))}
-            >
+            <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('Settings'))}>
               <Settings className="w-5 h-5" />
             </Button>
           </div>
         </div>
       </header>
-      
+      <nav aria-label="Pupil tools" className="md:hidden flex flex-wrap gap-1 px-3 py-2">
+        <Button variant="ghost" size="sm" onClick={() => navigate(createPageUrl('MemoryManager'))}><Brain className="w-4 h-4 mr-1" />Memories</Button>
+        <Button variant="ghost" size="sm" onClick={() => navigate(createPageUrl('Customize'))}><Sparkles className="w-4 h-4 mr-1" />Customize</Button>
+        <Button variant="ghost" size="sm" onClick={() => navigate(createPageUrl('Store'))}><ShoppingBag className="w-4 h-4 mr-1" />Store</Button>
+        <Button variant="ghost" size="sm" onClick={() => navigate(createPageUrl('Achievements'))}><Trophy className="w-4 h-4 mr-1" />Achievements</Button>
+      </nav>
+
+      {/* Mobile header - compact */}
+      <header className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-40 md:hidden">
+        <div className="px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">✨</span>
+            <h1 className="font-bold text-foreground text-sm">Epiphany.AI</h1>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="select-none h-9 w-9" onClick={() => navigate(createPageUrl('MemoryManager'))}>
+              <Brain className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="select-none h-9 w-9" onClick={() => navigate(createPageUrl('Store'))}>
+              <ShoppingBag className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="select-none h-9 w-9" onClick={() => navigate(createPageUrl('Achievements'))}>
+              <Trophy className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <PullToRefresh onRefresh={loadData}>
       <main className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Companion Display */}
@@ -232,12 +251,12 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm"
+              className="bg-card rounded-3xl p-6 border border-border shadow-sm"
             >
               {/* Companion Name & Level */}
               <div className="text-center mb-4">
-                <h2 className="text-2xl font-bold text-slate-800">{companion?.name}</h2>
-                <p className="text-sm text-slate-500 capitalize">
+                <h2 className="text-2xl font-bold text-foreground">{companion?.name}</h2>
+                <p className="text-sm text-muted-foreground capitalize">
                   {companion?.stage} • {companion?.species}
                 </p>
                 <div className="flex items-center justify-center gap-2 mt-1">
@@ -247,57 +266,57 @@ export default function Home() {
                   </span>
                 </div>
                 <div className="flex items-center justify-center gap-2 mt-1">
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-muted-foreground">
                     {companion?.build_archetype || 'Adaptive'} · {companion?.temperament || 'Calm'}
                   </span>
                 </div>
               </div>
-              
+
               {/* Avatar */}
               <div className="flex justify-center mb-6">
                 <CompanionAvatar companion={companion} size="large" />
               </div>
-              
+
               {/* Mood Indicator */}
               <div className="text-center mb-6">
-                <span className="inline-flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-full">
+                <span className="inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-full">
                   <span className="text-lg">{getMoodEmoji(companion?.mood)}</span>
-                  <span className="text-sm font-medium text-slate-600 capitalize">
+                  <span className="text-sm font-medium text-muted-foreground capitalize">
                     {companion?.mood || 'content'}
                   </span>
                 </span>
               </div>
-              
+
               {/* Compact Stats */}
               <StatsDisplay companion={companion} compact />
             </motion.div>
           </div>
-          
+
           {/* Main Interaction Area */}
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="w-full bg-white border border-slate-200 rounded-xl p-1 mb-4">
-                <TabsTrigger value="care" className="flex-1 rounded-lg data-[state=active]:bg-violet-100">
+              <TabsList className="w-full bg-card border border-border rounded-xl p-1 mb-4">
+                <TabsTrigger value="care" className="flex-1 rounded-lg data-[state=active]:bg-violet-100 select-none">
                   <Sparkles className="w-4 h-4 mr-2" />
                   Care
                 </TabsTrigger>
-                <TabsTrigger value="chat" className="flex-1 rounded-lg data-[state=active]:bg-violet-100">
+                <TabsTrigger value="chat" className="flex-1 rounded-lg data-[state=active]:bg-violet-100 select-none">
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Chat
                 </TabsTrigger>
-                <TabsTrigger value="stats" className="flex-1 rounded-lg data-[state=active]:bg-violet-100">
+                <TabsTrigger value="stats" className="flex-1 rounded-lg data-[state=active]:bg-violet-100 select-none">
                   <TrendingUp className="w-4 h-4 mr-2" />
                   Stats
                 </TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="care" className="mt-0">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm"
+                  className="bg-card rounded-3xl p-6 border border-border shadow-sm"
                 >
-                  <h3 className="font-semibold text-slate-800 mb-4">
+                  <h3 className="font-semibold text-foreground mb-4">
                     Care for {companion?.name}
                   </h3>
                   <ActionButtons
@@ -307,7 +326,7 @@ export default function Home() {
                     onPuzzleClick={handlePuzzleClick}
                     disabled={actionInProgress}
                   />
-                  
+
                   {/* Quick Tips */}
                   <div className="mt-6 p-4 bg-violet-50 rounded-xl">
                     <p className="text-sm text-violet-700">
@@ -316,7 +335,7 @@ export default function Home() {
                   </div>
                 </motion.div>
               </TabsContent>
-              
+
               <TabsContent value="chat" className="mt-0 space-y-3">
                 <div className="flex flex-wrap items-center gap-3 text-sm">
                   <Button variant="outline" size="sm" onClick={() => navigate('/AISettings')}>Model settings</Button>
@@ -335,14 +354,14 @@ export default function Home() {
                 />
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="stats" className="mt-0 space-y-4">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm"
+                  className="bg-card rounded-3xl p-6 border border-border shadow-sm"
                 >
-                  <h3 className="font-semibold text-slate-800 mb-6">
+                  <h3 className="font-semibold text-foreground mb-6">
                     {companion?.name}'s Stats
                   </h3>
                   <StatsDisplay companion={companion} />
@@ -384,6 +403,8 @@ export default function Home() {
           </div>
         </div>
       </main>
+      </PullToRefresh>
+
     </div>
   );
 }

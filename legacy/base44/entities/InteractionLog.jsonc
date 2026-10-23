@@ -1,0 +1,64 @@
+{
+  "name": "InteractionLog",
+  "type": "object",
+  "properties": {
+    "companion_id": {
+      "type": "string",
+      "description": "Reference to Companion entity"
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "feed",
+        "exercise",
+        "interact",
+        "study",
+        "play",
+        "puzzle",
+        "gift",
+        "battle",
+        "brain_import"
+      ],
+      "description": "Type of interaction"
+    },
+    "details": {
+      "type": "object",
+      "description": "Additional details about the interaction"
+    },
+    "stat_changes": {
+      "type": "object",
+      "description": "What stats changed and by how much"
+    },
+    "companion_response": {
+      "type": "string",
+      "description": "What the companion said or did"
+    },
+    "xp_awarded": {
+      "type": "number",
+      "default": 0,
+      "description": "XP earned from this interaction"
+    },
+    "pcp_awarded": {
+      "type": "number",
+      "default": 0,
+      "description": "PcP earned from this interaction"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "care",
+        "chat",
+        "battle",
+        "evolution",
+        "store",
+        "import"
+      ],
+      "default": "care",
+      "description": "Which domain triggered this log"
+    }
+  },
+  "required": [
+    "companion_id",
+    "action_type"
+  ]
+}

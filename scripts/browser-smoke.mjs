@@ -58,6 +58,14 @@ try {
   await capture('home');
   await page.getByRole('button', { name: 'Feed', exact: true }).click();
   await page.getByText(/happily munches|Yummy|tummy is happy/).first().waitFor();
+  const beforeRejectedCare = await page.locator('main').innerText();
+  await page.route('**/api/functions/applyCompanionAction', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ error: 'Care action unavailable in regression probe' }) }));
+  await page.getByRole('button', { name: 'Exercise', exact: true }).click();
+  await page.getByText('Care action unavailable in regression probe', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Exercise', exact: true }).click({ trial: true });
+  assert.equal(await page.getByRole('button', { name: 'Exercise', exact: true }).isEnabled(), true);
+  assert.equal(await page.locator('main').innerText(), beforeRejectedCare, 'rejected care must restore optimistic UI stats');
+  await page.unroute('**/api/functions/applyCompanionAction');
   await page.getByRole('tab', { name: 'Chat', exact: true }).click();
   await page.getByPlaceholder('Message Nova...').fill('Hello');
   await page.locator('form').last().locator('button[type=submit]').click();
@@ -164,6 +172,31 @@ try {
   await page.getByRole('heading', { name: /intelligence/ }).waitFor();
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   await capture('mobile-settings');
+  await page.goto(`${base}/Home`);
+  await page.getByRole('heading', { name: 'Nova', exact: true }).waitFor();
+  const mobileNav = page.getByRole('navigation', { name: 'Main navigation' });
+  await mobileNav.getByRole('button', { name: 'Dashboard', exact: true }).click();
+  await page.getByRole('heading', { name: 'Companion Dashboard', exact: true }).waitFor();
+  await capture('mobile-dashboard');
+  await mobileNav.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('heading', { name: 'Local edition', exact: true }).waitFor();
+  await mobileNav.getByRole('button', { name: 'Home', exact: true }).click();
+  await page.getByRole('heading', { name: 'Nova', exact: true }).waitFor();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const refreshed = page.waitForResponse(response => new URL(response.url()).pathname === '/api/entities/Companion');
+  for (const [type, y] of [['touchstart', 100], ['touchmove', 300], ['touchend', 300]]) {
+    await page.evaluate(([type, y]) => {
+      const target = document.querySelector('[data-pull-refresh]');
+      const event = new Event(type, { bubbles: true });
+      Object.defineProperty(event, 'touches', { value: [{ clientY: y }] });
+      target.dispatchEvent(event);
+    }, [type, y]);
+    await page.waitForTimeout(80);
+  }
+  assert.equal((await refreshed).status(), 200);
+  await page.getByRole('navigation', { name: 'Pupil tools' }).getByRole('button', { name: 'Memories', exact: true }).click();
+  await page.getByText('favorite_color', { exact: true }).waitFor();
+  await capture('mobile-memories');
   assert.deepEqual(errors, []); assert.deepEqual(failedRequests, []);
   console.log('Browser smoke passed: onboarding, care, durable chat, memory, model configuration, inference, training review/export, combat, inventory, settings, narrow layout.');
 } catch (error) {

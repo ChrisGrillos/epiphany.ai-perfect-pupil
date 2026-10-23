@@ -1,0 +1,71 @@
+{
+  "name": "CompanionMemory",
+  "type": "object",
+  "properties": {
+    "companion_id": {
+      "type": "string",
+      "description": "Reference to Companion entity"
+    },
+    "memory_key": {
+      "type": "string",
+      "description": "Unique identifier for the memory (e.g., 'favorite_color')"
+    },
+    "memory_value": {
+      "type": "string",
+      "description": "The actual memory content (encrypted)"
+    },
+    "memory_type": {
+      "type": "string",
+      "enum": [
+        "fact",
+        "preference",
+        "event",
+        "emotion",
+        "skill"
+      ],
+      "default": "fact"
+    },
+    "importance": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50,
+      "description": "How important this memory is (affects recall)"
+    },
+    "recall_count": {
+      "type": "number",
+      "default": 0,
+      "description": "How many times this memory has been accessed"
+    },
+    "last_recalled": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "interaction",
+        "notepad",
+        "observation",
+        "learning"
+      ],
+      "default": "interaction"
+    },
+    "is_encrypted": {
+      "type": "boolean",
+      "default": true
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorization and search"
+    }
+  },
+  "required": [
+    "companion_id",
+    "memory_key",
+    "memory_value"
+  ]
+}

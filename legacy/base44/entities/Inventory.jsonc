@@ -1,0 +1,25 @@
+{
+  "name": "Inventory",
+  "type": "object",
+  "properties": {
+    "item_id": {
+      "type": "string",
+      "description": "Reference to StoreItem"
+    },
+    "item_name": {
+      "type": "string"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1
+    },
+    "purchased_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "item_id",
+    "item_name"
+  ]
+}

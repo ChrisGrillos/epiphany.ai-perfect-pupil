@@ -10,6 +10,7 @@ import { ArrowLeft, User, Activity, Trophy, BarChart3 } from 'lucide-react';
 import CompanionProfile from '@/components/dashboard/CompanionProfile';
 import ActivityTimeline from '@/components/dashboard/ActivityTimeline';
 import Leaderboard from '@/components/dashboard/Leaderboard';
+import PullToRefresh from '@/components/mobile/PullToRefresh';
 
 export default function CompanionDashboard() {
   const navigate = useNavigate();
@@ -56,34 +57,35 @@ export default function CompanionDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-cyan-50">
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
+    <div className="min-h-screen bg-background">
+      <header className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-40">
         <div className="container mx-auto px-4 py-3 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(createPageUrl('Home'))}>
+          <Button variant="ghost" size="icon" className="select-none" onClick={() => navigate(createPageUrl('Home'))}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="font-bold text-slate-800 flex items-center gap-2">
+            <h1 className="font-bold text-foreground flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-violet-500" />
               Companion Dashboard
             </h1>
-            <p className="text-xs text-slate-500">{companion?.name}'s full profile & stats</p>
+            <p className="text-xs text-muted-foreground">{companion?.name}'s full profile & stats</p>
           </div>
         </div>
       </header>
 
+      <PullToRefresh onRefresh={loadData}>
       <main className="container mx-auto px-4 py-6 max-w-4xl">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full bg-white border border-slate-200 rounded-xl p-1 mb-6">
-            <TabsTrigger value="profile" className="flex-1 rounded-lg data-[state=active]:bg-violet-100">
+          <TabsList className="w-full bg-card border border-border rounded-xl p-1 mb-6">
+            <TabsTrigger value="profile" className="flex-1 rounded-lg data-[state=active]:bg-violet-100 select-none">
               <User className="w-4 h-4 mr-2" />
               Profile
             </TabsTrigger>
-            <TabsTrigger value="activity" className="flex-1 rounded-lg data-[state=active]:bg-violet-100">
+            <TabsTrigger value="activity" className="flex-1 rounded-lg data-[state=active]:bg-violet-100 select-none">
               <Activity className="w-4 h-4 mr-2" />
               Activity
             </TabsTrigger>
-            <TabsTrigger value="leaderboard" className="flex-1 rounded-lg data-[state=active]:bg-violet-100">
+            <TabsTrigger value="leaderboard" className="flex-1 rounded-lg data-[state=active]:bg-violet-100 select-none">
               <Trophy className="w-4 h-4 mr-2" />
               Leaderboard
             </TabsTrigger>
@@ -94,8 +96,8 @@ export default function CompanionDashboard() {
           </TabsContent>
 
           <TabsContent value="activity">
-            <div className="bg-white rounded-2xl p-6 border border-slate-200">
-              <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <div className="bg-card rounded-2xl p-6 border border-border">
+              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Activity className="w-5 h-5 text-violet-500" />
                 Recent Activity
               </h3>
@@ -104,8 +106,8 @@ export default function CompanionDashboard() {
           </TabsContent>
 
           <TabsContent value="leaderboard">
-            <div className="bg-white rounded-2xl p-6 border border-slate-200">
-              <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <div className="bg-card rounded-2xl p-6 border border-border">
+              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Trophy className="w-5 h-5 text-amber-500" />
                 Roster Leaderboard
               </h3>
@@ -113,8 +115,8 @@ export default function CompanionDashboard() {
             </div>
 
             {/* Achievement Summary */}
-            <div className="mt-4 bg-white rounded-2xl p-6 border border-slate-200">
-              <h3 className="font-semibold text-slate-800 mb-3">Achievement Progress</h3>
+            <div className="mt-4 bg-card rounded-2xl p-6 border border-border">
+              <h3 className="font-semibold text-foreground mb-3">Achievement Progress</h3>
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div className="p-3 bg-amber-50 rounded-xl">
                   <div className="text-2xl font-bold text-amber-600">{achievements.length}</div>
@@ -137,6 +139,8 @@ export default function CompanionDashboard() {
           </TabsContent>
         </Tabs>
       </main>
+      </PullToRefresh>
+
     </div>
   );
 }

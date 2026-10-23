@@ -149,3 +149,44 @@ semantic embeddings. Hardware throttling and busy system RAM affect speed.
 No training ran; existing reviewed-response/LoRA preflight remains separate.
 No installer/signing, cloud-provider live test, or sealed held-out evaluation
 was added. Earlier diagnostic reports are preserved, including failures.
+
+## GitHub reconciliation — 2026-10-23
+
+User request: Reconcile GitHub changes with the new Windows/local-model version,
+preserve all work, run tests, and push the updated version to GitHub.
+
+Preservation and merge:
+- Saved all local work as checkpoint commit 39aced4 and local branch
+  codex/windows-local-model-checkpoint-20261023 before merging.
+- Integrated all 28 upstream commits through 26b17df. Preserved all 40 hosted
+  Base44 files under legacy/base44 with identical Git blobs, plus hosted README
+  and CSS references. Active server/functions/training code matches the checkpoint.
+- Kept compatible upstream mobile navigation, pull-to-refresh, transitions,
+  safe-area/touch styling, care feedback and visual changes. Kept local privacy,
+  models, saved sessions, training review, smoothed avatar and teenage combat.
+- Shared bottom navigation outside animated containers; kept mobile access to
+  memories/customization/store/achievements. Added safe-area space below content.
+- Fixed optimistic care rollback on failure, refresh cleanup after errors,
+  and empty toast overlays intercepting phone controls. Automatic system dark
+  mode remains historical reference until all local screens support it.
+
+Verification:
+- npm ci succeeded from the preserved lockfile.
+- npm run check:release passed: lint, types, all 20 integration tests, offline
+  harness checks, production build. Rebuilt after the final safe-area adjustment.
+- Four Python dataset-gate tests passed.
+- Fixture and real local-model browser suites passed, including care rollback,
+  mobile tabs, pull-to-refresh and actual memory confirmation/restart/new-session
+  recall. No console errors or failed HTTP requests; screenshots inspected.
+- Browser send-to-render example was 6164 ms (one sample, not a new performance
+  distribution). The historical 17 October 52-scenario benchmark was not rerun;
+  harness/provider/training implementations were unchanged by reconciliation.
+- npm audit: 5 moderate, 0 high, 0 critical; inherited Tailwind/PostCSS/Router
+  dependency migrations remain separate work. No forced major upgrade.
+- GitHub write authorization verified by dry-run. No credentials, databases,
+  datasets, model weights or generated screenshots are staged for publication.
+- Production restarted from merged source on port4318 with managed local model;
+  existing user database was preserved. Final game client artifacts are under
+  output/reconciliation-game-client.
+
+Merge decisions are documented in docs/github-reconciliation.md and legacy/README.md.

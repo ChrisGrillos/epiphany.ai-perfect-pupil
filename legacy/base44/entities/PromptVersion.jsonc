@@ -1,0 +1,50 @@
+{
+  "name": "PromptVersion",
+  "type": "object",
+  "properties": {
+    "version_tag": {
+      "type": "string",
+      "description": "Semantic version (e.g., 'v1.0.0')"
+    },
+    "purpose": {
+      "type": "string",
+      "enum": [
+        "companion_chat",
+        "battle_narration",
+        "evolution_guidance",
+        "honesty_engine",
+        "memory_extraction"
+      ],
+      "description": "Which system prompt this version serves"
+    },
+    "system_prompt": {
+      "type": "string",
+      "description": "The full system prompt template text"
+    },
+    "personality_guardrails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Hard rules the LLM must never violate"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "Only one version per purpose should be active"
+    },
+    "changelog": {
+      "type": "string",
+      "description": "What changed from previous version"
+    },
+    "test_results": {
+      "type": "object",
+      "description": "Summary of test outcomes for this prompt version"
+    }
+  },
+  "required": [
+    "version_tag",
+    "purpose",
+    "system_prompt"
+  ]
+}

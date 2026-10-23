@@ -1,0 +1,27 @@
+/* Prevent browser bounce / overscroll */
+html, body {
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile touch optimizations: prevent text selection on interactive elements */
+button,
+[role="tab"],
+[role="button"],
+a,
+.select-none {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Minimum 44px touch targets on touch devices */
+@media (pointer: coarse) {
+  button:not([data-size="icon"]),
+  [role="tab"],
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    min-height: 44px;
+  }
+}
